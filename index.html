@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ScriptY — Library</title>
+  <style>
+    :root{
+      --bg:#0f1115; --card:#171a22; --card2:#12141b; --text:#e7e9ee; --muted:#9aa3b2;
+      --line:#2a2f3d; --accent:#6aa9ff; --danger:#ff6a6a;
+      --radius:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:var(--sans); background:linear-gradient(180deg, #0b0d12 0%, var(--bg) 40%, #0b0d12 100%); color:var(--text);}
+    .wrap{max-width:1100px; margin:0 auto; padding:18px 18px 32px;}
+    .topbar{
+      display:flex; align-items:center; gap:10px; padding:14px 16px; border:1px solid var(--line);
+      background:rgba(23,26,34,.85); backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      position: sticky; top: 10px; z-index: 5;
+    }
+    .brand{font-weight:700; letter-spacing:.2px}
+    .spacer{flex:1}
+    .btn{
+      border:1px solid var(--line); background:linear-gradient(180deg, #1a1e28 0%, #12141b 100%);
+      color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;
+      font-weight:600; font-size:14px;
+    }
+    .btn:hover{border-color:#3a4154}
+    .btn.primary{border-color:rgba(106,169,255,.5)}
+    .btn.danger{border-color:rgba(255,106,106,.5)}
+    .hint{color:var(--muted); font-size:13px; padding:10px 2px 2px}
+    .grid{
+      margin-top:16px;
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns: repeat(2, 1fr);} }
+    @media (max-width: 640px){ .grid{grid-template-columns: 1fr;} }
+    .doc{
+      border:1px solid var(--line); background:linear-gradient(180deg, var(--card) 0%, var(--card2) 100%);
+      border-radius: var(--radius);
+      overflow:hidden;
+      display:flex; flex-direction:column;
+      min-height: 132px;
+    }
+    .docHead{
+      padding:14px 14px 10px;
+      display:flex; align-items:flex-start; gap:10px;
+    }
+    .thumb{
+      width:42px; height:54px; border-radius:8px;
+      background:linear-gradient(180deg, #242a38 0%, #151826 100%);
+      border:1px solid #323a4f;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25) inset;
+      flex:0 0 auto;
+    }
+    .docTitle{font-weight:700; font-size:15px; line-height:1.25; word-break:break-word}
+    .docMeta{color:var(--muted); font-size:12px; margin-top:4px}
+    .docBody{padding:0 14px 12px; color:var(--muted); font-size:13px; line-height:1.35; flex:1}
+    .docActions{
+      padding:12px 12px;
+      border-top:1px solid var(--line);
+      display:flex; flex-wrap:wrap; gap:8px;
+    }
+    .mini{
+      border:1px solid var(--line); background:#0f1115; color:var(--text);
+      padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px;
+    }
+    .mini:hover{border-color:#3a4154}
+    .mini.danger{border-color:rgba(255,106,106,.5); color:#ffd2d2}
+    .status{
+      margin-top:12px; color:var(--muted); font-family:var(--mono);
+      border:1px dashed var(--line); border-radius: 12px; padding:10px 12px;
+      background: rgba(0,0,0,.15);
+      white-space: pre-wrap;
+    }
+
+    /* Modal */
+    .modalBack{
+      position:fixed; inset:0; background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center; padding:16px; z-index: 50;
+    }
+    .modal{
+      width:min(560px, 100%); border-radius: 16px; border:1px solid var(--line);
+      background:linear-gradient(180deg, #171a22 0%, #10131b 100%);
+      padding:14px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+    .modal h2{margin:2px 0 8px; font-size:16px}
+    .modal p{margin:0 0 10px; color:var(--muted); font-size:13px; line-height:1.4}
+    .inp{
+      width:100%; padding:11px 12px; border-radius: 12px;
+      border:1px solid var(--line); background:#0b0d12; color:var(--text);
+      font-family: var(--mono); font-size: 12.5px;
+    }
+    .modalRow{display:flex; gap:10px; margin-top:10px; align-items:center}
+    .modalRow .btn{flex:0 0 auto}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">ScriptY</div>
+      <div style="color:var(--muted);font-size:13px;">Library</div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="newBtn" type="button">New Script</button>
+      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn" id="cloudBtn" type="button">Cloud Settings</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="status" id="status">Ready.</div>
+  </div>
+
+  <div class="modalBack" id="cloudModalBack">
+    <div class="modal">
+      <h2>Cloud Settings</h2>
+      <p>Paste your Google Apps Script Web App <b>/exec</b> URL. This is saved in your browser so both <span style="font-family:var(--mono)">index.html</span> and <span style="font-family:var(--mono)">editor.html</span> use the same cloud.</p>
+      <input class="inp" id="cloudUrlInp" type="text" placeholder="https://script.google.com/macros/s/.../exec" />
+      <div class="modalRow">
+        <button class="btn primary" id="saveCloudBtn" type="button">Save</button>
+        <button class="btn" id="testCloudBtn" type="button">Test</button>
+        <div class="spacer"></div>
+        <button class="btn" id="closeCloudBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const CLOUD_URL_KEY = "CLOUD_URL"; // single source of truth shared with editor.html
+  const grid = document.getElementById("grid");
+  const statusEl = document.getElementById("status");
+  const hintEl = document.getElementById("hint");
+
+  function setStatus(msg){
+    statusEl.textContent = msg;
+  }
+
+  function getCloudUrl(){
+    try{ return (localStorage.getItem(CLOUD_URL_KEY) || "").trim(); }catch(_e){ return ""; }
+  }
+  function setCloudUrl(url){
+    try{ localStorage.setItem(CLOUD_URL_KEY, (url||"").trim()); }catch(_e){}
+  }
+
+  // JSONP helper (no CORS required)
+  function jsonp(baseUrl, params={}, timeoutMs=14000){
+    return new Promise((resolve, reject) => {
+      const cbName = "__jsonp_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      let timer = null;
+
+      function cleanup(){
+        try{ delete window[cbName]; }catch(_e){ window[cbName] = undefined; }
+        if(script.parentNode) script.parentNode.removeChild(script);
+        if(timer) clearTimeout(timer);
+      }
+
+      window[cbName] = (data) => { cleanup(); resolve(data); };
+
+      const url = new URL(baseUrl);
+      url.searchParams.set("callback", cbName);
+      // cache bust
+      url.searchParams.set("_t", String(Date.now()));
+      for(const [k,v] of Object.entries(params)){
+        if(v === undefined || v === null) continue;
+        url.searchParams.set(k, String(v));
+      }
+
+      script.onerror = () => { cleanup(); reject(new Error("JSONP load error (network, permissions, or wrong URL).")); };
+      script.src = url.toString();
+      document.head.appendChild(script);
+
+      timer = setTimeout(() => { cleanup(); reject(new Error("JSONP timeout.")); }, timeoutMs);
+    });
+  }
+
+  function fmtDate(iso){
+    if(!iso) return "—";
+    const d = new Date(iso);
+    if(isNaN(d.getTime())) return iso;
+    return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+
+  function openEditor(fileId){
+    const url = new URL("editor.html", location.href);
+    url.searchParams.set("fileId", fileId);
+    location.href = url.toString();
+  }
+
+  async function refresh(){
+    const cloud = getCloudUrl();
+    if(!cloud){
+      hintEl.textContent = "Cloud URL not set. Click “Cloud Settings” to connect your Google Drive.";
+      grid.innerHTML = "";
+      return;
+    }
+    hintEl.textContent = "Connected to cloud. Documents are stored as .json files inside the Drive folder SCREENPLAY_CLOUD.";
+    setStatus("Loading…");
+    try{
+      const res = await jsonp(cloud, { action:"list" }, 16000);
+      if(!res || res.ok !== true) throw new Error(res && res.error ? res.error : "List failed.");
+      const files = Array.isArray(res.files) ? res.files : [];
+      render(files);
+      setStatus("Loaded " + files.length + " file(s).");
+    }catch(err){
+      grid.innerHTML = "";
+      setStatus("ERROR: " + (err && err.message ? err.message : String(err)));
+    }
+  }
+
+  function render(files){
+    grid.innerHTML = "";
+    if(!files.length){
+      const empty = document.createElement("div");
+      empty.style.color = "var(--muted)";
+      empty.style.padding = "10px 2px";
+      empty.textContent = "No scripts yet. Click “New Script”.";
+      grid.appendChild(empty);
+      return;
+    }
+
+    for(const f of files){
+      const card = document.createElement("div");
+      card.className = "doc";
+
+      const head = document.createElement("div");
+      head.className = "docHead";
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      head.appendChild(thumb);
+
+      const info = document.createElement("div");
+      info.style.minWidth = "0";
+
+      const title = document.createElement("div");
+      title.className = "docTitle";
+      title.textContent = (f.name || "Untitled").replace(/\.json$/i,"");
+      info.appendChild(title);
+
+      const meta = document.createElement("div");
+      meta.className = "docMeta";
+      meta.textContent = "Modified: " + fmtDate(f.modifiedTime);
+      info.appendChild(meta);
+
+      head.appendChild(info);
+
+      const body = document.createElement("div");
+      body.className = "docBody";
+      body.textContent = "Click Open to continue editing.";
+      const actions = document.createElement("div");
+      actions.className = "docActions";
+
+      const openBtn = document.createElement("button");
+      openBtn.className = "mini";
+      openBtn.type = "button";
+      openBtn.textContent = "Open";
+      openBtn.onclick = () => openEditor(f.id);
+      actions.appendChild(openBtn);
+
+      const renameBtn = document.createElement("button");
+      renameBtn.className = "mini";
+      renameBtn.type = "button";
+      renameBtn.textContent = "Rename";
+      renameBtn.onclick = async () => {
+        const newName = prompt("Rename to:", title.textContent);
+        if(!newName) return;
+        try{
+          setStatus("Renaming…");
+          const cloud = getCloudUrl();
+          const res = await jsonp(cloud, { action:"rename", id:f.id, name:newName }, 16000);
+          if(!res || res.ok !== true) throw new Error(res && res.error ? res.error : "Rename failed.");
+          await refresh();
+        }catch(err){
+          setStatus("ERROR: " + (err && err.message ? err.message : String(err)));
+        }
+      };
+      actions.appendChild(renameBtn);
+
+      const dupBtn = document.createElement("button");
+      dupBtn.className = "mini";
+      dupBtn.type = "button";
+      dupBtn.textContent = "Duplicate";
+      dupBtn.onclick = async () => {
+        try{
+          setStatus("Duplicating…");
+          const cloud = getCloudUrl();
+          const res = await jsonp(cloud, { action:"duplicate", id:f.id }, 16000);
+          if(!res || res.ok !== true) throw new Error(res && res.error ? res.error : "Duplicate failed.");
+          await refresh();
+        }catch(err){
+          setStatus("ERROR: " + (err && err.message ? err.message : String(err)));
+        }
+      };
+      actions.appendChild(dupBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "mini danger";
+      delBtn.type = "button";
+      delBtn.textContent = "Delete";
+      delBtn.onclick = async () => {
+        if(!confirm("Move this script to Drive trash?\n\n" + title.textContent)) return;
+        try{
+          setStatus("Deleting…");
+          const cloud = getCloudUrl();
+          const res = await jsonp(cloud, { action:"trash", id:f.id }, 16000);
+          if(!res || res.ok !== true) throw new Error(res && res.error ? res.error : "Delete failed.");
+          await refresh();
+        }catch(err){
+          setStatus("ERROR: " + (err && err.message ? err.message : String(err)));
+        }
+      };
+      actions.appendChild(delBtn);
+
+      card.appendChild(head);
+      card.appendChild(body);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    }
+  }
+
+  async function newScript(){
+    // New script is created in the editor. We just navigate with no fileId.
+    location.href = "editor.html";
+  }
+
+  // Cloud modal
+  const back = document.getElementById("cloudModalBack");
+  const inp = document.getElementById("cloudUrlInp");
+  function openCloudModal(show){
+    back.style.display = show ? "flex" : "none";
+    if(show){
+      inp.value = getCloudUrl();
+      setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    }
+  }
+  document.getElementById("cloudBtn").onclick = () => openCloudModal(true);
+  document.getElementById("closeCloudBtn").onclick = () => openCloudModal(false);
+  document.getElementById("saveCloudBtn").onclick = () => {
+    setCloudUrl(inp.value);
+    openCloudModal(false);
+    refresh();
+  };
+  document.getElementById("testCloudBtn").onclick = async () => {
+    try{
+      setStatus("Testing cloud…");
+      const url = inp.value.trim();
+      if(!url) throw new Error("Paste your /exec URL first.");
+      const res = await jsonp(url, { action:"list" }, 16000);
+      if(!res || res.ok !== true) throw new Error(res && res.error ? res.error : "Test failed.");
+      setStatus("Cloud OK (" + (res.files?.length||0) + " file(s)).");
+    }catch(err){
+      setStatus("ERROR: " + (err && err.message ? err.message : String(err)));
+    }
+  };
+
+  document.getElementById("newBtn").onclick = newScript;
+  document.getElementById("refreshBtn").onclick = refresh;
+
+  // First run
+  if(!getCloudUrl()){
+    hintEl.textContent = "Cloud URL not set. Click “Cloud Settings” to connect your Google Drive.";
+    openCloudModal(true);
+  }else{
+    refresh();
+  }
+})();
+</script>
+</body>
+</html>
