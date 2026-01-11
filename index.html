@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Script Library</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f6f7f9; margin:0; }
+    header { padding:18px 18px 10px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    h1 { font-size:18px; margin:0; }
+    .btn { background:#111; color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; }
+    .btn.secondary { background:#fff; color:#111; border:1px solid #d9d9e2; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .wrap { padding: 0 18px 24px; }
+    .status { font-size:13px; color:#444; margin:10px 0 14px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+    .card {
+      background:#fff; border-radius:14px; padding:12px 12px 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      cursor:pointer; border:1px solid #e8e8ee;
+    }
+    .card:hover { border-color:#d7d7df; }
+    .title { font-weight:700; font-size:14px; margin:0 0 6px; color:#111; }
+    .meta { font-size:12px; color:#666; margin:0; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    input[type="text"]{
+      padding:10px 12px; border-radius:10px; border:1px solid #d9d9e2; min-width:240px;
+      outline:none;
+    }
+    input[type="text"]:focus{ border-color:#111; }
+    .small { font-size:12px; color:#666; margin-top:10px; }
+    .hint { font-size:12px; color:#666; }
+    .topline { display:flex; gap:10px; align-items:center; flex-wrap:wrap; width:100%; }
+    .spacer { flex:1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topline">
+      <h1>Script Library</h1>
+      <div class="spacer"></div>
+      <button id="refreshBtn" class="btn secondary">Refresh</button>
+    </div>
+    <button id="newBtn" class="btn">New Script</button>
+    <input id="newTitle" type="text" placeholder="Optional title (leave blank for Untitled)" />
+    <span class="hint">Opens in <b>editor.html</b></span>
+  </header>
+
+  <div class="wrap">
+    <div id="status" class="status">Loading…</div>
+    <div id="grid" class="grid"></div>
+    <div class="small">If nothing appears, make sure your Apps Script is deployed as a Web App with access set to <b>Anyone</b>.</div>
+  </div>
+
+<script>
+  const API_URL_KEY = "SCRIPTY_API_URL";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyRHMKoLtJD6uX2GnWUp-hot3tfMvP9PPFwfr4MwKqiAtetQKDcdZ_LJyyd96hl5CYo/exec";
+
+  const $ = (sel) => document.querySelector(sel);
+  const statusEl = $("#status");
+  const gridEl = $("#grid");
+  const newBtn = $("#newBtn");
+  const newTitle = $("#newTitle");
+  const refreshBtn = $("#refreshBtn");
+
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  // JSONP helper (works from GitHub Pages)
+  function jsonp(url, params = {}) {
+    return new Promise((resolve, reject) => {
+      const cbName = "cb_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      params.callback = cbName;
+      const qs = new URLSearchParams(params).toString();
+      script.src = url + (url.includes("?") ? "&" : "?") + qs;
+
+      window[cbName] = (data) => {
+        cleanup();
+        resolve(data);
+      };
+
+      script.onerror = () => {
+        cleanup();
+        reject(new Error("JSONP load error"));
+      };
+
+      function cleanup() {
+        try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+        script.remove();
+      }
+
+      document.body.appendChild(script);
+    });
+  }
+
+  function fmtDate(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString();
+    } catch(e) { return iso; }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  }
+
+  async function loadList() {
+    setStatus("Loading scripts from Drive…");
+    gridEl.innerHTML = "";
+    try {
+      const res = await jsonp(API_URL, { action: "list" });
+      if (!res || !res.ok) throw new Error(res?.error || "List failed");
+
+      const files = res.files || [];
+      if (!files.length) {
+        setStatus("No scripts found yet. Click “New Script”.");
+        return;
+      }
+
+      setStatus(`Showing ${files.length} script(s).`);
+      for (const f of files) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <p class="title">${escapeHtml(f.title || "Untitled")}</p>
+          <p class="meta">Last edited: ${escapeHtml(fmtDate(f.modified || ""))}</p>
+        `;
+        card.addEventListener("click", () => {
+          window.location.href = "editor.html?docId=" + encodeURIComponent(f.id);
+        });
+        gridEl.appendChild(card);
+      }
+    } catch (err) {
+      setStatus("Error: " + (err?.message || err));
+    }
+  }
+
+  refreshBtn.addEventListener("click", loadList);
+
+  newBtn.addEventListener("click", async () => {
+    newBtn.disabled = true;
+    const title = (newTitle.value || "").trim();
+    setStatus("Creating new script…");
+    try {
+      const res = await jsonp(API_URL, { action: "create", title });
+      if (!res || !res.ok) throw new Error(res?.error || "Create failed");
+      const id = res.id;
+      if (!id) throw new Error("No id returned");
+      window.location.href = "editor.html?docId=" + encodeURIComponent(id);
+    } catch (err) {
+      setStatus("Error: " + (err?.message || err));
+      newBtn.disabled = false;
+    }
+  });
+
+  loadList();
+</script>
+</body>
+</html>
