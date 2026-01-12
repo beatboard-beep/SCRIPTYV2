@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScriptY — Home</title>
+<style>
+:root{
+    /* Physical page */
+    --a4w-mm: 215.9;
+    --a4h-mm: 279.4;
+
+    /* Margins (page-edge based) */
+    --m-top-mm: 25.4;   /* 2.55cm (measured) */
+    --m-bot-mm: 25.4;   /* ~2.45cm (measured) */
+    --m-right-mm: 25.4;   /* 2.5cm */
+    --m-left-mm: 38.1;    /* 3.9cm */
+
+
+    /* Title page margins (Final Draft style: centered on full page, not script text column) */
+    --tp-left-mm: 25.4;   /* match right so title text is truly centered on page */
+    --tp-right-mm: 25.4;
+
+    /* Wrap calibration (mm): tweak to match Final Draft line breaks across browser fonts */
+    --wrap-cal-mm: 0;  /* wrap calibration (mm): adjust only if needed */
+
+    /* Header band reserved for page number (non-editable) */
+    --header-band-mm: 12;
+
+    /* Baseline step (physical units) */
+    --baseline-mm: 4.233; /* ~12pt in mm (12pt = 4.233mm) */
+    --baseline-cal: 1.000; /* hidden calibration knob */
+    --baseline-step-mm: calc(var(--baseline-mm) * var(--baseline-cal));
+
+    /* Font */
+    --font-size-pt: 12;
+    --font-stack: "Courier Final Draft","Courier Prime","Courier New",monospace;
+
+    /* Geometry (mm) – filled by JS */
+    --x-action-L-mm: 39;
+    --x-action-R-mm: 25;
+    --x-character-L-mm: 0;
+    --x-character-R-mm: 25;
+    --x-dialogue-L-mm: 0;
+    --x-dialogue-R-mm: 0;
+    --x-paren-L-mm: 0;
+    --x-paren-R-mm: 0;
+    --x-trans-R-mm: 25;
+
+    /* UI */
+    --ui-bg: #101114;
+    --ui-panel: #171922;
+    --ui-border: #2a2f3a;
+    --ui-text: #e9ecf2;
+    --ui-muted: #aeb6c6;
+    --ui-accent: #5b8cff;
+  }
+
+  
+
+html, body {
+  height: 100%;
+}
+body{
+  margin:0;
+  font-family: var(--font-stack, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  background: radial-gradient(1400px 800px at 20% 10%, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 60%), var(--ui-bg, #0c0d10);
+  color: var(--ui-text, #e7e9ef);
+}
+
+a{ color: inherit; }
+
+.homeView{
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: radial-gradient(1200px 700px at 20% 0%, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 60%), var(--ui-bg);
+    color: var(--ui-text);
+    display: none;
+  }
+  .homeView.show{ display:block; }
+  .homeInner{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 18px 40px;
+  }
+  .homeTop{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .homeBrand{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .homeBrand .t1{ font-weight:700; letter-spacing:.3px; }
+  .homeBrand .t2{ color: var(--ui-muted); font-size: 12px; }
+  .homeActions{ display:flex; gap:10px; align-items:center; }
+  .homeBtn{
+    border: 1px solid var(--ui-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    color: var(--ui-text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor:pointer;
+    font-weight: 600;
+  }
+  .homeBtn:hover{ filter: brightness(1.05); }
+  .homeBtn.primary{
+    border-color: rgba(90,130,255,0.55);
+    background: linear-gradient(180deg, rgba(90,130,255,0.25), rgba(90,130,255,0.10));
+  }
+  .homeSearchRow{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    margin: 14px 0 18px;
+  }
+  .homeSearch{
+    flex:1;
+    border: 1px solid var(--ui-border);
+    background: rgba(23,25,34,0.65);
+    color: var(--ui-text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    outline: none;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .homeHint{ color: var(--ui-muted); font-size: 12px; }
+  .homeSectionTitle{
+    display:flex;
+    align-items:baseline;
+    justify-content: space-between;
+    margin: 14px 2px 10px;
+  }
+  .homeSectionTitle b{ font-size: 13px; letter-spacing:.25px; }
+  .homeGrid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 980px){ .homeGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 620px){ .homeGrid{ grid-template-columns: 1fr; } }
+
+  .docCard{
+    border: 1px solid var(--ui-border);
+    background: rgba(23,25,34,0.70);
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    cursor:pointer;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    transition: transform .10s ease, filter .10s ease;
+  }
+  .docCard:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+  .docName{ font-weight: 700; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .docMeta{ display:flex; gap:10px; color: var(--ui-muted); font-size: 12px; }
+  .docMeta .dot{ opacity:.6; }
+  .docEmpty{
+    border: 1px dashed rgba(255,255,255,0.18);
+    background: rgba(23,25,34,0.35);
+    border-radius: 16px;
+    padding: 18px;
+    color: var(--ui-muted);
+    font-size: 13px;
+  }
+  .homeFooter{
+    margin-top: 16px;
+    color: var(--ui-muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .homeFooter code{
+    font-family: var(--font-stack);
+    font-size: 12px;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+
+
+/* In index.html, Home is the whole page */
+.homeView{ position: relative; inset: auto; display:block; }
+.homeView.show{ display:block; }
+
+/* Fix the broken card class mismatch by defining the actual classes used here */
+.homeGrid{ align-items: start; }
+
+/* Doc-card (Google Docs-ish) */
+.homeCard{
+  appearance:none;
+  border: 1px solid var(--ui-border);
+  background: rgba(23,25,34,0.70);
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+  transition: transform .10s ease, filter .10s ease, border-color .10s ease;
+}
+.homeCard:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+.homeCard:focus{ outline: none; border-color: rgba(255,255,255,0.28); box-shadow: 0 0 0 3px rgba(255,255,255,0.08), 0 10px 24px rgba(0,0,0,0.22); }
+
+.homeThumb{
+  /* Mini A4 page thumbnail (portrait) */
+  height: auto;
+  aspect-ratio: 210 / 297; /* A4 */
+  background: rgba(0,0,0,0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  position: relative;
+}
+
+/* The "paper" inside the thumbnail */
+.homeThumb .thumbPaper{
+  position:absolute;
+  inset: 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+
+/* Title-page preview typography */
+.homeThumb .tpTitle,
+.homeThumb .tpBy,
+.homeThumb .tpName{
+  position:absolute;
+  left: 10%;
+  right: 10%;
+  text-align: center;
+  color: #111;
+  font-family: var(--font-stack);
+  letter-spacing: .25px;
+}
+
+.homeThumb .tpTitle{
+  top: 34%;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1.12;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.homeThumb .tpBy{
+  top: 45%;
+  font-size: 8px;
+  opacity: .85;
+}
+.homeThumb .tpName{
+  top: 52%;
+  font-size: 9px;
+  font-weight: 600;
+  opacity: .95;
+}
+
+.homeThumb .tpContact{
+  position:absolute;
+  right: 8%;
+  bottom: 8%;
+  width: 56%;
+  text-align: left;
+  font-size: 6.7px;
+  line-height: 1.15;
+  color: rgba(0,0,0,0.75);
+  white-space: pre-line;
+  overflow: hidden;
+  max-height: 32%;
+}
+
+/* If fields are empty, hide them cleanly */
+.homeThumb .isEmpty{ display:none; }
+
+.homeThumbLabel{ display:none; }
+
+.homeCardBody{ padding: 12px 14px 14px; }
+.homeCardTitle{
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.homeCardMeta{
+  margin-top: 6px;
+  font-size: 12px;
+  color: #ffffff;
+  opacity: .72;
+}
+.homeEmpty{
+  grid-column: 1 / -1;
+  padding: 22px 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.03);
+  opacity: .85;
+}
+.homeFooter{
+  margin-top: 18px;
+  opacity: .65;
+  padding: 0 6px;
+}
+
+
+/* --- Placeholder (skeleton) cards for layout preview --- */
+.homeCard.isPlaceholder{
+  cursor: default;
+}
+.homeCard.isPlaceholder:hover{
+  transform: none;
+  box-shadow: var(--shadow);
+  border-color: var(--border);
+}
+.skel{
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+.skel::after{
+  content:"";
+  position:absolute;
+  inset:-40% -60%;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.00) 0%,
+    rgba(255,255,255,0.08) 45%,
+    rgba(255,255,255,0.00) 70%);
+  transform: rotate(12deg);
+  animation: skelShimmer 1.35s ease-in-out infinite;
+}
+@keyframes skelShimmer{
+  0%{ transform: translateX(-35%) rotate(12deg); }
+  100%{ transform: translateX(35%) rotate(12deg); }
+}
+.homeThumb.placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+.homeDocIcon{
+  width:44px; height:56px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  position: relative;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.20);
+}
+.homeDocIcon:before{
+  content:"";
+  position:absolute;
+  left:10px; right:10px; top:14px;
+  height:3px;
+  border-radius:3px;
+  background: rgba(255,255,255,0.22);
+  box-shadow:
+    0 10px 0 rgba(255,255,255,0.16),
+    0 20px 0 rgba(255,255,255,0.12),
+    0 30px 0 rgba(255,255,255,0.10);
+}
+.homeTextLines{
+  width: 62%;
+  max-width: 220px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.homeLine{
+  height: 12px;
+  border-radius: 999px;
+}
+.homeLine.short{ width: 55%; }
+.homeLine.long{ width: 92%; opacity: .95; }
+
+
+
+
+/* --- Modal system (Cloud / Open) --- */
+.modalShade{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 18px;
+  background: rgba(0,0,0,0.62);
+  z-index: 99999;
+}
+.modalShade.show{ display:flex; }
+.modal{
+  width: min(560px, 92vw);
+  background: rgba(23,25,34,0.98);
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 26px 70px rgba(0,0,0,0.55);
+}
+.modalTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.modalTitle{ font-weight: 800; letter-spacing: .2px; }
+.modalClose{
+  border: 1px solid var(--ui-border);
+  background: rgba(255,255,255,0.06);
+  color: var(--ui-text);
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 700;
+}
+.modalClose:hover{ filter: brightness(1.06); }
+.modalLabel{
+  font-size: 12px;
+  color: var(--ui-muted);
+  margin: 10px 2px 6px;
+}
+.modalInput{
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--ui-border);
+  background: rgba(10,11,14,0.55);
+  color: var(--ui-text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  outline: none;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.modalInput:focus{ border-color: rgba(90,130,255,0.65); box-shadow: 0 0 0 3px rgba(90,130,255,0.18); }
+.modalRow{
+  display:flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.modalBtn{
+  border: 1px solid var(--ui-border);
+  background: rgba(255,255,255,0.06);
+  color: var(--ui-text);
+  padding: 9px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 700;
+}
+.modalBtn:hover{ filter: brightness(1.06); }
+.modalBtn.primary{
+  border-color: rgba(90,130,255,0.55);
+  background: linear-gradient(180deg, rgba(90,130,255,0.25), rgba(90,130,255,0.10));
+}
+/* --- UI CLEANUP PATCH (hide non-essential hints) --- */
+.homeFooter{ display:none !important; }
+/* Hide small status/count chips that clutter the corner */
+.homeHint{ display:none !important; }
+/* If any legacy debug blocks exist */
+.debug, .dev, .devOnly, .debugOnly{ display:none !important; }
+
+
+/* Home card text readability */
+.homeCardTitle{color:#fff !important;}
+.homeCardMeta{color:rgba(255,255,255,.72) !important;}
+</style>
+</head>
+<body>
+
+<section class="homeView show" id="homeView" aria-label="Home">
+  <div class="homeInner">
+    <div class="homeTop">
+      <div class="homeBrand">
+        <div class="t1">SCRIPTY</div>
+        <div class="t2">Recent scripts</div>
+      </div>
+      <div class="homeActions">
+        <button class="homeBtn" type="button" id="homeCloudBtn" title="Cloud settings">Cloud</button>
+        <button class="homeBtn" type="button" id="homeOpenBtn" title="Open from link or ID">Open</button>
+        <button class="homeBtn primary" type="button" id="homeNewBtn" title="New script">New</button>
+      </div>
+    </div>
+
+    <div class="homeSearchRow">
+      <input class="homeSearch" id="homeSearch" type="text" placeholder="Search scripts…" autocomplete="off" spellcheck="false">
+      <div class="homeHint" id="homeStatus">Not connected</div>
+    </div>
+
+    <div class="homeSectionTitle">
+      <b>Drive Recents</b>
+      <div class="homeHint"><span id="homeCount">0</span></div>
+    </div>
+
+    <div class="homeGrid" id="homeGrid"></div>
+
+    
+  </div>
+</section>
+
+<div class="modalShade" id="cloudModalShade" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
+    <div class="modalTop">
+      <div class="modalTitle" id="cloudModalTitle">Cloud settings</div>
+      <button class="modalClose" type="button" id="cloudCloseBtn">Close</button>
+    </div>
+
+    <div class="modalLabel">Apps Script Web App URL</div>
+    <input class="modalInput" id="cloudUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec" />
+
+    <div class="modalRow">
+      <button class="modalBtn" type="button" id="cloudTestBtn">Test</button>
+      <button class="modalBtn primary" type="button" id="cloudSaveBtn">Save</button>
+    </div>
+
+    <div class="modalLabel" style="margin-top:12px;">Status</div>
+    <div style="font-size:13px; color: var(--ui-muted);" id="cloudModalStatus">—</div>
+  </div>
+</div>
+
+<div class="modalShade" id="openModalShade" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="openModalTitle">
+    <div class="modalTop">
+      <div class="modalTitle" id="openModalTitle">Open from link</div>
+      <button class="modalClose" type="button" id="openCloseBtn">Close</button>
+    </div>
+
+    <div class="modalLabel">Paste a Google Drive file link, file ID, or an editor link</div>
+    <input class="modalInput" id="openInput" type="text" placeholder="Drive link (…/d/FILEID/…) or FILEID or editor.html?pid=…" />
+
+    <div class="modalRow">
+      <button class="modalBtn" type="button" id="openClearBtn">Clear</button>
+      <button class="modalBtn primary" type="button" id="openGoBtn">Open</button>
+    </div>
+
+    <div class="modalLabel" style="margin-top:12px;">Status</div>
+    <div style="font-size:13px; color: var(--ui-muted);" id="openModalStatus">—</div>
+  </div>
+</div>
+
+
+<script>
+/* ScriptY — Home / Library (Drive-backed) — stable JSONP list/open routing */
+
+(function(){
+  "use strict";
+
+  /* -------- Safe localStorage wrapper -------- */
+  const __LS = (()=>{ try{
+    const ls = window.localStorage;
+    const k = "__scripty_ls_test__";
+    ls.setItem(k,"1"); ls.removeItem(k);
+    return ls;
+  }catch(_e){ return null; }})();
+  const lsGetRaw = (key)=>{ try{ return __LS ? __LS.getItem(String(key)) : null; }catch(_e){ return null; } };
+  const lsSet    = (key, val)=>{ try{ __LS && __LS.setItem(String(key), String(val)); }catch(_e){} };
+
+  /* -------- Cloud endpoint storage -------- */
+  const CLOUD_ENDPOINT_KEYS = [
+    "SCRIPTY_CLOUD_ENDPOINT_V1",
+    "SCRIPTY_CLOUD_ENDPOINT",
+    "SCRIPTY_CLOUD_URL",
+    "CLOUD_ENDPOINT",
+    "SCRIPTY_GAS_ENDPOINT",
+    "SCRIPTY_CLOUD_ENDPOINT_V0"
+  ];
+
+  function normalizeEndpoint(url){
+    let u = String(url||"").trim();
+    if(!u) return "";
+    u = u.replace(/\s+/g,"");
+    // Strip query/hash so users can paste ?action=list etc.
+    try{
+      const U = new URL(u);
+      U.search = "";
+      U.hash = "";
+      u = U.toString();
+    }catch(_e){}
+    return u;
+  }
+
+
+  /* -------- Config (config.json) -------- */
+  let __CONFIG_CLOUD_ENDPOINT = "";
+  let __CONFIG_PROMISE = null;
+
+  function loadConfigCloud_(){
+    if(__CONFIG_PROMISE) return __CONFIG_PROMISE;
+    __CONFIG_PROMISE = (async ()=>{
+      try{
+        const r = await fetch("config.json?_=" + Date.now(), { cache: "no-store" });
+        if(!r.ok) return "";
+        const j = await r.json();
+        const u = normalizeEndpoint(j.cloudUrl || j.cloudURL || j.cloud || j.endpoint || "");
+        if(u) __CONFIG_CLOUD_ENDPOINT = u;
+        return __CONFIG_CLOUD_ENDPOINT;
+      }catch(_e){
+        return "";
+      }
+    })();
+    return __CONFIG_PROMISE;
+  }
+
+  function getCloudEndpoint(){
+    // URL hash can open modal, but endpoint itself comes from storage/session
+    try{
+      const s = (typeof sessionStorage !== "undefined") ? sessionStorage.getItem("SCRIPTY_CLOUD_ENDPOINT_SESSION") : "";
+      const v = normalizeEndpoint(s);
+      if(v) return v;
+    }catch(_e){}
+    for(const k of CLOUD_ENDPOINT_KEYS){
+      const v = normalizeEndpoint(lsGetRaw(k));
+      if(v) return v;
+    }
+    if(__CONFIG_CLOUD_ENDPOINT) return __CONFIG_CLOUD_ENDPOINT;
+    return "";
+  }
+
+  function setCloudEndpoint(url){
+    const u = normalizeEndpoint(url);
+    if(!u) return;
+    try{
+      for(const k of CLOUD_ENDPOINT_KEYS){
+        try{ lsSet(k, u); }catch(_e){}
+      }
+      try{ (typeof sessionStorage!=="undefined") && sessionStorage.setItem("SCRIPTY_CLOUD_ENDPOINT_SESSION", u); }catch(_e){}
+    }catch(_e){}
+  }
+
+  /* -------- UI elements -------- */
+  const gridEl   = document.getElementById("homeGrid");
+  const statusEl = document.getElementById("homeStatus");
+  const countEl  = document.getElementById("homeCount");
+  const searchEl = document.getElementById("homeSearch");
+
+  const cloudBtn = document.getElementById("homeCloudBtn");
+  const openBtn  = document.getElementById("homeOpenBtn");
+  const newBtn   = document.getElementById("homeNewBtn");
+
+  const cloudShade = document.getElementById("cloudModalShade");
+  const cloudInput = document.getElementById("cloudUrlInput");
+  const cloudStatus = document.getElementById("cloudModalStatus");
+  const cloudSaveBtn = document.getElementById("cloudSaveBtn");
+  const cloudCancelBtn = document.getElementById("cloudCancelBtn");
+  const cloudTestBtn = document.getElementById("cloudTestBtn");
+
+  const openShade = document.getElementById("openModalShade");
+  const openInput = document.getElementById("openInput");
+  const openStatus = document.getElementById("openModalStatus");
+  const openCloseBtn = document.getElementById("openCloseBtn");
+  const openGoBtn = document.getElementById("openGoBtn");
+  const openClearBtn = document.getElementById("openClearBtn");
+
+  function setHomeStatus(t){ if(statusEl) statusEl.textContent = String(t||""); }
+  function setHomeCount(n){ if(countEl) countEl.textContent = String(n||0); }
+
+  function updateCloudButton(){
+    if(!cloudBtn) return;
+    const ep = getCloudEndpoint();
+    cloudBtn.textContent = ep ? "Cloud ✓" : "Cloud";
+    cloudBtn.title = ep ? ("Cloud connected\n" + ep) : "Cloud settings";
+  }
+
+  function openCloudModal(){
+    if(!cloudShade) return;
+    cloudShade.classList.add("show");
+    cloudShade.setAttribute("aria-hidden","false");
+    if(cloudInput) cloudInput.value = getCloudEndpoint() || "";
+    if(cloudStatus) cloudStatus.textContent = "—";
+    setTimeout(()=>{ try{ cloudInput && cloudInput.focus(); }catch(_e){} }, 0);
+  }
+  function closeCloudModal(){
+    if(!cloudShade) return;
+    cloudShade.classList.remove("show");
+    cloudShade.setAttribute("aria-hidden","true");
+  }
+
+  function openOpenModal(){
+    if(!openShade) return;
+    openShade.classList.add("show");
+    openShade.setAttribute("aria-hidden","false");
+    if(openStatus) openStatus.textContent = "—";
+    if(openInput) openInput.value = "";
+    setTimeout(()=>{ try{ openInput && openInput.focus(); }catch(_e){} }, 0);
+  }
+  function closeOpenModal(){
+    if(!openShade) return;
+    openShade.classList.remove("show");
+    openShade.setAttribute("aria-hidden","true");
+  }
+
+  function ensureCloudThen(fn){
+    const ep = getCloudEndpoint();
+    if(ep){
+      try{ fn(ep); }catch(_e){}
+      return;
+    }
+    // queue action after cloud is saved
+    __AFTER_CLOUD = (endpoint)=>{ try{ fn(endpoint); }catch(_e){} };
+    openCloudModal();
+    if(cloudStatus) cloudStatus.textContent = "Paste your Apps Script /exec URL, then Save.";
+  }
+
+  /* -------- Networking: JSONP + fallback fetch -------- */
+  function jsonpGet(endpoint, params, timeoutMs=15000){
+    return new Promise((resolve, reject)=>{
+      const ep = normalizeEndpoint(endpoint);
+      if(!ep){ reject(new Error("Cloud URL not set")); return; }
+
+      const cb = "cb_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+      const q = new URLSearchParams(Object.assign({}, params||{}, { callback: cb, _: String(Date.now()) }));
+      const src = ep + (ep.includes("?") ? "&" : "?") + q.toString();
+
+      const s = document.createElement("script");
+      s.async = true;
+
+      let done = false;
+      const t = setTimeout(()=>{
+        if(done) return;
+        done = true;
+        cleanup();
+        reject(new Error("JSONP timeout"));
+      }, timeoutMs);
+
+      function cleanup(){
+        clearTimeout(t);
+        try{ delete window[cb]; }catch(_e){ window[cb] = undefined; }
+        if(s.parentNode) s.parentNode.removeChild(s);
+      }
+
+      window[cb] = (data)=>{
+        if(done) return;
+        done = true;
+        cleanup();
+        resolve(data);
+      };
+
+      s.onerror = ()=>{
+        if(done) return;
+        done = true;
+        cleanup();
+        reject(new Error("JSONP load error"));
+      };
+
+      s.src = src;
+      document.head.appendChild(s);
+    });
+  }
+
+
+
+  // POST without CORS: iframe form submit -> Apps Script replies with parent.postMessage(...)
+  function iframePostSave(endpoint, reqObj, timeoutMs=15000){
+    return new Promise((resolve, reject)=>{
+      const ep = normalizeEndpoint(endpoint);
+      if(!ep){ reject(new Error("Cloud URL not set")); return; }
+
+      const iframeName = "cloudPost_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+      const iframe = document.createElement("iframe");
+      iframe.name = iframeName;
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = ep;
+      form.target = iframeName;
+      form.style.display = "none";
+
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "payload";
+      input.value = JSON.stringify(reqObj || {});
+      form.appendChild(input);
+      document.body.appendChild(form);
+
+      let done = false;
+      const t = setTimeout(()=>{
+        if(done) return;
+        done = true;
+        cleanup();
+        reject(new Error("Cloud POST timeout"));
+      }, timeoutMs);
+
+      function cleanup(){
+        clearTimeout(t);
+        window.removeEventListener("message", onMsg);
+        try{ form.remove(); }catch(_e){}
+        try{ iframe.remove(); }catch(_e){}
+      }
+
+      function onMsg(ev){
+        const data = ev && ev.data;
+        if(!data || typeof data !== "object") return;
+        // Only accept messages that look like our Apps Script response
+        if(!("ok" in data) || (!("fileId" in data) && !("saved" in data) && !("error" in data))) return;
+        if(done) return;
+        done = true;
+        cleanup();
+        resolve(data);
+      }
+
+      window.addEventListener("message", onMsg);
+      form.submit();
+    });
+  }
+
+  async function fetchJsonGet(url, timeoutMs=15000){
+    const ctl = new AbortController();
+    const t = setTimeout(()=>ctl.abort(), timeoutMs);
+    try{
+      const r = await fetch(url, { method:"GET", cache:"no-store", signal: ctl.signal });
+      const txt = await r.text();
+      try{ return JSON.parse(txt); }catch(_e){ throw new Error("Non-JSON response"); }
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  function parseListPayload(payload){
+    if(!payload) return [];
+    const files = payload.files || payload.items || payload.data || payload.list || null;
+    const arr = Array.isArray(files) ? files : (Array.isArray(payload) ? payload : []);
+    return arr.map(f=>{
+      const id = f.id || f.fileId || f.fileid || f.key || "";
+      const name = f.name || f.title || f.filename || (id ? ("Drive file " + id.slice(0,6)) : "Untitled");
+      const modified = f.modified || f.updated || f.lastUpdated || f.mtime || "";
+      return { id, name, modified };
+    }).filter(x=>x.id || x.name);
+  }
+
+  function fmtModified(s){
+    if(!s) return "";
+    // If it's ISO-like, compact it
+    try{
+      const d = new Date(s);
+      if(!isNaN(d.getTime())){
+        return d.toISOString().replace("T"," ").replace("Z","");
+      }
+    }catch(_e){}
+    return String(s).replace("T"," ").replace("Z","");
+  }
+
+  function stripJsonExt(name){
+    return String(name||"").replace(/\.json$/i,"");
+  }
+
+  function makePid(){
+    return (Math.random().toString(16).slice(2,10) + Date.now().toString(16).slice(-4)).toUpperCase();
+  }
+
+  function extractRouteFromString(str){
+    const s = String(str||"").trim();
+    if(!s) return null;
+
+    // If it's already an editor link with pid/fileId
+    try{
+      const u = new URL(s);
+      const pid = u.searchParams.get("pid");
+      const fileId = u.searchParams.get("fileId") || u.searchParams.get("fileid") || u.searchParams.get("id");
+      const name = u.searchParams.get("name");
+      if(pid || fileId) return { pid: pid || "", fileId: fileId || "", name: name || "" };
+    }catch(_e){}
+
+    // Raw query style
+    const mPid = s.match(/[?&]pid=([A-Za-z0-9_-]{6,})/i);
+    if(mPid) return { pid: mPid[1], fileId:"", name:"" };
+    const mFile = s.match(/[?&](fileId|fileid|id)=([A-Za-z0-9_-]{10,})/i);
+    if(mFile) return { pid:"", fileId: mFile[2], name:"" };
+
+    // Drive link patterns
+    try{
+      const u = new URL(s);
+      const path = u.pathname || "";
+      const m1 = path.match(/\/d\/([A-Za-z0-9_-]{10,})/);
+      if(m1) return { pid:"", fileId: m1[1], name:"" };
+      const m2 = path.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/);
+      if(m2) return { pid:"", fileId: m2[1], name:"" };
+      const idParam = u.searchParams.get("id");
+      if(idParam) return { pid:"", fileId: idParam, name:"" };
+      const m3 = path.match(/\/([A-Za-z0-9_-]{20,})$/);
+      if(m3) return { pid:"", fileId: m3[1], name:"" };
+    }catch(_e){}
+
+    // Raw Drive fileId-ish string
+    if(/^[A-Za-z0-9_-]{20,}$/.test(s)) return { pid:"", fileId:s, name:"" };
+
+    return null;
+  }
+
+  /* -------- Rendering -------- */
+  let __HOME_FILES = [];
+  let __AFTER_CLOUD = null;
+
+  function renderHome(){
+    const q = String(searchEl?.value || "").trim().toLowerCase();
+    const list = __HOME_FILES.filter(f => !q || stripJsonExt(f.name).toLowerCase().includes(q));
+    setHomeCount(list.length);
+    if(!gridEl) return;
+    gridEl.innerHTML = "";
+
+    const ep = getCloudEndpoint();
+    if(!ep){
+      const empty = document.createElement("div");
+      empty.className = "homeEmpty";
+      empty.style.gridColumn = "1 / -1";
+      empty.innerHTML = 'Cloud not connected — click <b>Cloud</b> to paste your Apps Script /exec URL.';
+      gridEl.appendChild(empty);
+      return;
+    }
+
+    if(!list.length){
+      const empty = document.createElement("div");
+      empty.className = "homeEmpty";
+      empty.style.gridColumn = "1 / -1";
+      empty.textContent = "No scripts found yet — open the editor and press Save to create your first file.";
+      gridEl.appendChild(empty);
+      return;
+    }
+
+    for(const f of list){
+      const card = document.createElement("div");
+      card.className = "homeCard";
+      card.tabIndex = 0;
+
+      const thumb = document.createElement("div");
+      thumb.className = "homeThumb";
+      // simple placeholder thumb — keeps layout stable
+      thumb.innerHTML = '<div style="opacity:.65; font-size:12px; letter-spacing:.08em; text-align:center; padding-top:28px;">TITLE PAGE</div>';
+
+      const body = document.createElement("div");
+      body.className = "homeCardBody";
+
+      const title = document.createElement("div");
+      title.className = "homeCardTitle";
+      title.textContent = stripJsonExt(f.name);
+
+      const meta = document.createElement("div");
+      meta.className = "homeCardMeta";
+      meta.textContent = f.modified ? ("Modified " + fmtModified(f.modified)) : "Drive file";
+
+      body.appendChild(title);
+      body.appendChild(meta);
+
+      card.appendChild(thumb);
+      card.appendChild(body);
+
+      const go = ()=>{
+        ensureCloudThen((endpoint)=>{
+          const p = new URLSearchParams();
+          if(f.id) p.set("fileId", String(f.id));
+          if(f.name) p.set("name", String(f.name));
+          if(endpoint) p.set("cloud", endpoint);
+          window.location.href = "editor.html?" + p.toString();
+        });
+      };
+
+      card.addEventListener("click", go);
+      card.addEventListener("keydown", (ev)=>{
+        if(ev.key === "Enter" || ev.key === " "){
+          ev.preventDefault();
+          go();
+        }
+      });
+
+      gridEl.appendChild(card);
+    }
+  }
+
+  /* -------- Library load -------- */
+  async function refreshHomeList(){
+    const endpoint = getCloudEndpoint();
+    if(!endpoint){
+      setHomeStatus("Not connected");
+      __HOME_FILES = [];
+      renderHome();
+      return;
+    }
+    setHomeStatus("Loading…");
+    try{
+      // Prefer JSONP (no CORS), fallback fetch if backend supports CORS JSON
+      let payload;
+      try{
+        payload = await jsonpGet(endpoint, { action:"list" }, 15000);
+      }catch(_e){
+        payload = await fetchJsonGet(endpoint + "?action=list&_=" + Date.now(), 15000);
+      }
+      __HOME_FILES = parseListPayload(payload);
+      // newest first if modified exists
+      if(__HOME_FILES.some(f => f.modified)){
+        __HOME_FILES.sort((a,b)=> String(b.modified||"").localeCompare(String(a.modified||"")));
+      } else {
+        __HOME_FILES.sort((a,b)=> stripJsonExt(a.name).localeCompare(stripJsonExt(b.name)));
+      }
+      setHomeStatus("Ready");
+      renderHome();
+    }catch(err){
+      console.error(err);
+      setHomeStatus("Connection failed");
+      __HOME_FILES = [];
+      renderHome();
+    }
+  }
+
+  /* -------- Modal actions -------- */
+  if(cloudBtn) cloudBtn.addEventListener("click", openCloudModal);
+  if(openBtn) openBtn.addEventListener("click", openOpenModal);
+
+  if(newBtn) newBtn.addEventListener("click", ()=>{
+    ensureCloudThen(async (ep)=>{
+      const pid = makePid();
+
+      // Step A: create the Drive file FIRST (so editor starts with fileId)
+      setHomeStatus("Creating…");
+      try{
+        const now = Date.now();
+        const req = {
+          action: "save",
+          pid: pid,
+          // IMPORTANT: unique placeholder name so a "New" script can never overwrite another Untitled file
+          name: ("Untitled " + pid),
+          // Minimal valid editor doc so load() never chokes
+          doc: {
+            version: 2,
+            pid: pid,
+            title: { title:"", writtenby:"", name:"", contact:"" },
+            lines: [],
+            createdAt: now,
+            updatedAt: now
+          }
+        };
+
+        const resp = await iframePostSave(ep, req, 15000);
+        if(!resp || resp.ok !== true || !resp.fileId) throw new Error((resp && resp.error) ? resp.error : "Create failed");
+
+        const qs = new URLSearchParams();
+        qs.set("fileId", String(resp.fileId));
+        qs.set("pid", pid);
+        if(resp.file && resp.file.name) qs.set("name", String(resp.file.name));
+        if(ep) qs.set("cloud", ep);
+        window.location.href = "editor.html?" + qs.toString();
+      }catch(err){
+        console.error(err);
+        // Fallback: open editor without fileId (local-only until first Save)
+        const qs = new URLSearchParams();
+        qs.set("pid", pid);
+        if(ep) qs.set("cloud", ep);
+        window.location.href = "editor.html?" + qs.toString();
+      }
+    });
+  });if(cloudCancelBtn) cloudCancelBtn.addEventListener("click", closeCloudModal);
+  if(cloudShade) cloudShade.addEventListener("click", (e)=>{
+    if(e.target === cloudShade) closeCloudModal();
+  });
+
+  if(cloudSaveBtn) cloudSaveBtn.addEventListener("click", async ()=>{
+    const u = normalizeEndpoint(cloudInput ? cloudInput.value : "");
+    if(!u){ if(cloudStatus) cloudStatus.textContent = "Please paste a URL."; return; }
+    if(cloudStatus) cloudStatus.textContent = "Saving…";
+    setCloudEndpoint(u);
+    updateCloudButton();
+    closeCloudModal();
+
+    // Run queued action after cloud set
+    const queued = __AFTER_CLOUD;
+    __AFTER_CLOUD = null;
+    if(typeof queued === "function"){
+      try{ queued(u); }catch(_e){}
+      return;
+    }
+    await refreshHomeList();
+  });
+
+  if(cloudTestBtn) cloudTestBtn.addEventListener("click", async ()=>{
+    const u = normalizeEndpoint(cloudInput ? cloudInput.value : "");
+    if(!u){ if(cloudStatus) cloudStatus.textContent = "Please paste a URL."; return; }
+    if(cloudStatus) cloudStatus.textContent = "Testing…";
+    try{
+      let payload;
+      try{ payload = await jsonpGet(u, { action:"list" }, 12000); }
+      catch(_e){ payload = await fetchJsonGet(u + "?action=list&_=" + Date.now(), 12000); }
+      const files = parseListPayload(payload);
+      if(cloudStatus) cloudStatus.textContent = "OK — found " + files.length + " file(s).";
+    }catch(err){
+      console.error(err);
+      if(cloudStatus) cloudStatus.textContent =
+        "Failed. If you're on Firefox, try disabling Enhanced Tracking Protection for this site, then test again.";
+    }
+  });
+
+  // Open modal
+  if(openCloseBtn) openCloseBtn.addEventListener("click", closeOpenModal);
+  if(openShade) openShade.addEventListener("click", (e)=>{
+    if(e.target === openShade) closeOpenModal();
+  });
+
+  function setOpenStatus(msg){ if(openStatus) openStatus.textContent = String(msg||""); }
+
+  if(openClearBtn) openClearBtn.addEventListener("click", ()=>{
+    if(openInput) openInput.value = "";
+    setOpenStatus("—");
+    try{ openInput && openInput.focus(); }catch(_e){}
+  });
+
+  if(openGoBtn) openGoBtn.addEventListener("click", ()=>{
+    const route = extractRouteFromString(openInput ? openInput.value : "");
+    if(!route){ setOpenStatus("Could not recognize that link/ID."); return; }
+
+    ensureCloudThen((ep)=>{
+      const qs = new URLSearchParams();
+      if(route.pid) qs.set("pid", route.pid);
+      if(route.fileId) qs.set("fileId", route.fileId);
+      if(route.name) qs.set("name", route.name);
+      if(ep) qs.set("cloud", ep);
+      window.location.href = "editor.html?" + qs.toString();
+    });
+  });
+
+  if(openInput) openInput.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){ e.preventDefault(); openGoBtn && openGoBtn.click(); }
+  });
+
+  /* -------- Pending open after redirect from editor -------- */
+  function handlePendingOpen(){
+    try{
+      const params = new URLSearchParams(window.location.search || "");
+      const pendingFileId = (params.get("pendingFileId")||"").trim();
+      const pendingName   = (params.get("pendingName")||"").trim();
+      const pendingPid    = (params.get("pendingPid")||"").trim();
+      const token = pendingFileId || pendingPid || pendingName;
+      if(!token) return;
+
+      const onceKey = "SCRIPTY_PENDING_OPEN_ONCE:" + token;
+      let already = false;
+      try{ already = (typeof sessionStorage!=="undefined") && !!sessionStorage.getItem(onceKey); }catch(_e){}
+      if(already) return;
+
+      const doOpen = (ep)=>{
+        try{ (typeof sessionStorage!=="undefined") && sessionStorage.setItem(onceKey, "1"); }catch(_e){}
+        try{
+          const clean = new URL(window.location.href);
+          clean.searchParams.delete("pendingFileId");
+          clean.searchParams.delete("pendingName");
+          clean.searchParams.delete("pendingPid");
+          history.replaceState(null, "", clean.toString());
+        }catch(_e){}
+
+        const qs = new URLSearchParams();
+        if(pendingFileId) qs.set("fileId", pendingFileId);
+        if(pendingName) qs.set("name", pendingName);
+        if(pendingPid) qs.set("pid", pendingPid);
+        if(ep) qs.set("cloud", ep);
+        window.location.href = "editor.html?" + qs.toString();
+      };
+
+      const epNow = getCloudEndpoint();
+      if(epNow){
+        doOpen(epNow);
+      }else{
+        __AFTER_CLOUD = (ep)=>doOpen(ep);
+        openCloudModal();
+        if(cloudStatus) cloudStatus.textContent = "Paste your Apps Script URL, then Save.";
+      }
+    }catch(_e){}
+  }
+
+  /* -------- Boot -------- */
+  window.addEventListener("load", ()=>{
+    (async ()=>{
+      await loadConfigCloud_();
+      updateCloudButton();
+      refreshHomeList();
+      handlePendingOpen();
+
+      const h = String(window.location.hash||"").toLowerCase();
+      if(h==="#open") openOpenModal();
+      if(h==="#cloud") openCloudModal();
+    })();
+  });
+
+  if(searchEl) searchEl.addEventListener("input", renderHome);
+
+})();
+</script></body>
+</html>
