@@ -1,8 +1,5 @@
 {
-  "cloudUrl": "https://script.google.com/macros/s/AKfycbxOlmWMN9ZXz9VQCsWMhlvfQNPwPooEc8qx-YVPfn3gv1VA2v8v1JDVQKfYB_OO3tG9gQ/exec"
-}
-{
-  "cloudUrl": "YOUR EXISTING APPS SCRIPT LINK — keep yours",
+  "cloudUrl": "https://script.google.com/macros/s/AKfycbxOlmWMN9ZXz9VQCsWMhlvfQNPwPooEc8qx-YVPfn3gv1VA2v8v1JDVQKfYB_OO3tG9gQ/exec",
   "firebase": {
     "apiKey": "AIzaSyAPpbdb9bBgSTeo4EPhkH7ns-alSGqXBdE",
     "authDomain": "scripty-91a6e.firebaseapp.com",
