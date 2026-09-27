@@ -1,5 +1,14 @@
 {
   "cloudUrl": "https://script.google.com/macros/s/AKfycbxOlmWMN9ZXz9VQCsWMhlvfQNPwPooEc8qx-YVPfn3gv1VA2v8v1JDVQKfYB_OO3tG9gQ/exec"
 }
-
+{
+  "cloudUrl": "YOUR EXISTING APPS SCRIPT LINK — keep yours",
+  "firebase": {
+    "apiKey": "AIzaSyAPpbdb9bBgSTeo4EPhkH7ns-alSGqXBdE",
+    "authDomain": "scripty-91a6e.firebaseapp.com",
+    "databaseURL": "https://scripty-91a6e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "projectId": "scripty-91a6e",
+    "appId": "1:51841618865:web:514ade0d98ac1a49e0a390"
+  }
+}
 \
