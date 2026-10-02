@@ -2075,6 +2075,7 @@ html,body{ background: var(--uiBg) !important; }
           <div class="sep"></div>
           <button class="item" id="mLibrary" type="button">Library</button>
           <button class="item" id="mStoryboard" type="button">Storyboard</button>
+          <button class="item" id="mTreatment" type="button">Treatment</button>
           <div class="sep"></div>
           <button class="item" id="mPrint" type="button">Print</button>
           <button class="item itemToggle" id="mWatermark" role="menuitemcheckbox" aria-checked="false" type="button"><span class="label">Watermark…</span><span class="tick" aria-hidden="true"></span></button>
@@ -17314,6 +17315,7 @@ function clearHighlights(){
     location.href = window.__storyboardHref();
   }
   document.getElementById("mStoryboard")?.addEventListener("click", goStoryboard);
+  document.getElementById("mTreatment")?.addEventListener("click", () => { location.href = window.__storyboardHref().replace("storyboard.html", "treatment.html"); });
 
   // One-click way back to the Library, left of the menus (same place the Storyboard keeps it)
   const bar = document.querySelector(".menubar");
