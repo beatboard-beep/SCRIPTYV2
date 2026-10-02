@@ -117,6 +117,18 @@
       throw e;
     }
   }
-
-  window.Ripple = { ensureGoogleUser, route, normalizeEndpoint, loadConfig_, getCloudEndpoint, getCloudKey, setCloudKey, cloudParam, escapeHtml, loadScript, askPassword, fetchJson_, apiGet, apiPost };
+  // Asks the hub to refresh this script's room->project mapping. Never throws, waits at most 8s.
+  async function roomAccess(auth, fileId){
+    try{
+      const cfg = await loadConfig_();
+      const url = normalizeEndpoint(cfg.hubUrl || "");
+      const user = auth && auth.currentUser;
+      if(!url || !user || !fileId) return { linked:false };
+      const idToken = await user.getIdToken();
+      const out = await fetchJson_(url, { method:"POST", headers:{ "Content-Type":"text/plain;charset=UTF-8" },
+        body: JSON.stringify({ idToken, action:"roomAccess", fileId }) }, 8000);
+      return out && out.ok ? out.data : { linked:false };
+    }catch(_e){ return { linked:false }; }
+  }
+   window.Ripple = { ensureGoogleUser, roomAccess, route, normalizeEndpoint, loadConfig_, getCloudEndpoint, getCloudKey, setCloudKey, cloudParam, escapeHtml, loadScript, askPassword, fetchJson_, apiGet, apiPost };
 })();
