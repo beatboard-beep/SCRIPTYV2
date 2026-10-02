@@ -308,6 +308,7 @@
     // signs in anonymously the same way before touching "rooms/...", so the Storyboard does too.
     const auth = fb.auth();
     await window.Ripple.ensureGoogleUser(auth, fb);
+    await window.Ripple.roomAccess(auth, S.fileId);
     return fb.database().ref("rooms/" + roomKey + "/storyboard");
   }
   // The room key changes when the team password changes or a script is made Private (Code.gs v21+
