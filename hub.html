@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub</title>
+<style>
+  :root { --bg:#f6f7f9; --panel:#fff; --line:#e1e4e8; --ink:#1f2328; --mute:#656d76; --accent:#1a73e8; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; font:14px/1.4 system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  .hidden { display:none !important; }
+  button { font:inherit; }
+  .btn { padding:7px 12px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--accent); cursor:pointer; text-decoration:none; font-size:13px; }
+  .btn:hover { background:var(--bg); }
+  .btn:disabled { opacity:.5; cursor:wait; }
+  #gate { display:flex; height:100%; align-items:center; justify-content:center; flex-direction:column; gap:14px; color:var(--mute); }
+  #gate h1 { margin:0; color:var(--ink); font-size:20px; }
+  #app { display:grid; grid-template-columns:230px 1fr; height:100%; }
+  #sidebar { background:var(--panel); border-right:1px solid var(--line); overflow:auto; display:flex; flex-direction:column; }
+  #me { padding:12px 16px; border-bottom:1px solid var(--line); font-size:12px; color:var(--mute); word-break:break-all; }
+  #me button { display:block; margin-top:6px; padding:0; border:0; background:none; color:var(--accent); cursor:pointer; font-size:12px; }
+  #sidebar h2 { margin:0; padding:14px 16px 6px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); }
+  .project { display:block; width:100%; text-align:left; padding:10px 16px; border:0; background:none; cursor:pointer; color:inherit; }
+  .project:hover { background:var(--bg); }
+  .project.active { background:#e8f0fe; color:var(--accent); font-weight:600; }
+  #newProject { margin:12px 16px; }
+  #main { display:flex; flex-direction:column; min-width:0; }
+  #banner { display:flex; gap:12px; align-items:center; padding:8px 16px; background:#fff8e1; border-bottom:1px solid #f0e0a0; font-size:13px; }
+  #banner button { margin-left:auto; border:0; background:none; cursor:pointer; font-size:16px; color:var(--mute); }
+  #bar { display:flex; align-items:center; gap:4px; padding:8px 12px 0; background:var(--panel); border-bottom:1px solid var(--line); min-height:45px; }
+  #tabs { display:flex; gap:4px; flex-wrap:wrap; }
+  .tab { padding:8px 14px; border:1px solid transparent; border-bottom:0; border-radius:6px 6px 0 0; background:none; cursor:pointer; color:var(--mute); }
+  .tab.active { background:var(--bg); border-color:var(--line); color:var(--ink); font-weight:600; position:relative; top:1px; }
+  #actions { margin-left:auto; display:flex; gap:8px; margin-bottom:6px; }
+  #frames { position:relative; flex:1; }
+  #frames iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
+  #empty { padding:40px; color:var(--mute); }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); max-width:80vw; padding:10px 16px; border-radius:8px; background:#1f2328; color:#fff; font-size:13px; z-index:10; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>Hub</h1>
+  <div id="gateMsg">Loading...</div>
+  <button id="signIn" class="btn hidden">Sign in with Google</button>
+</div>
+
+<div id="app" class="hidden">
+  <nav id="sidebar">
+    <div id="me"><span id="who"></span><button id="signOut">Sign out</button></div>
+    <h2>Projects</h2>
+    <div id="projects"></div>
+    <button id="newProject" class="btn">+ New project</button>
+  </nav>
+  <main id="main">
+    <div id="banner">
+      <span>Be signed into the same Google account in this browser that has access to the Sheets, or the tabs will show a login wall.</span>
+      <button id="dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+    <div id="bar">
+      <div id="tabs"></div>
+      <div id="actions">
+        <button id="addSheet" class="btn hidden">+ Add sheet</button>
+        <a id="folder" class="btn hidden" target="_blank" rel="noopener">Drive folder</a>
+        <a id="open" class="btn hidden" target="_blank" rel="noopener">Open in Google Sheets</a>
+      </div>
+    </div>
+    <div id="frames"><div id="empty"></div></div>
+  </main>
+</div>
+<div id="toast" class="hidden"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAPpbdb9bBgSTeo4EPhkH7ns-alSGqXBdE",
+  authDomain: "scripty-91a6e.firebaseapp.com",
+  databaseURL: "https://scripty-91a6e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "scripty-91a6e",
+  storageBucket: "scripty-91a6e.firebasestorage.app",
+  messagingSenderId: "51841618865",
+  appId: "1:51841618865:web:514ade0d98ac1a49e0a390"
+};
+const APPS_URL = "https://script.google.com/macros/s/AKfycbwETI1H3OdX7mA7GXbqUbVAFX7TzA2BMI3nesuNA3rYf7ejM9zwRUh2qRQxOVdKcmaV_g/exec";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const $ = id => document.getElementById(id);
+
+let me = null;
+let projects = {};          // pid -> project data (live from Firebase)
+let projectUnsubs = {};     // pid -> unsubscribe fn
+let userProjectsUnsub = null;
+let frames = {};            // "pid:key" -> iframe, created on first view, then kept hidden
+let current = { pid: null, key: null };
+let lastKey = {};           // pid -> last viewed sheet key
+let pendingProject = null;  // select this project once it arrives
+let pendingKey = null;      // { pid, key } select this sheet once it arrives
+
+const sheetUrl = (id, minimal) => `https://docs.google.com/spreadsheets/d/${id}/edit` + (minimal ? "?rm=minimal" : "");
+const sortedIds = () => Object.keys(projects).sort((a, b) => (projects[a].name || "").localeCompare(projects[b].name || ""));
+const sheetsOf = p => Object.entries(p.sheets || {}).map(([key, s]) => ({ key, ...s })).sort((a, b) => a.title.localeCompare(b.title));
+const isOwner = p => !!me && p.ownerUid === me.uid;
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add("hidden"), 6000);
+}
+
+async function api(action, args = {}) {
+  const token = await auth.currentUser.getIdToken();
+  const res = await fetch(APPS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ token, action, ...args })
+  });
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.error);
+  return out.data;
+}
+
+async function run(btn, fn) {
+  btn.disabled = true;
+  try { await fn(); } catch (e) { toast(e.message || String(e)); }
+  btn.disabled = false;
+}
+
+// ---------- auth ----------
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    teardown();
+    $("app").classList.add("hidden");
+    $("gate").classList.remove("hidden");
+    $("gateMsg").textContent = "Sign in to see your projects.";
+    $("signIn").classList.remove("hidden");
+    return;
+  }
+  me = user;
+  $("who").textContent = user.email;
+  $("gate").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  try { await api("claimInvites"); } catch (e) { toast("Invites: " + e.message); }
+  watchProjects();
+});
+
+$("signIn").onclick = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { toast("Sign-in failed: " + (e.message || e)); }
+};
+$("signOut").onclick = () => signOut(auth);
+
+function teardown() {
+  if (userProjectsUnsub) userProjectsUnsub();
+  userProjectsUnsub = null;
+  Object.values(projectUnsubs).forEach(u => u());
+  projectUnsubs = {};
+  projects = {};
+  Object.values(frames).forEach(f => f.remove());
+  frames = {};
+  current = { pid: null, key: null };
+  me = null;
+}
+
+// ---------- live data ----------
+
+function watchProjects() {
+  userProjectsUnsub = onValue(ref(db, "userProjects/" + me.uid), snap => {
+    const ids = Object.keys(snap.val() || {});
+    ids.forEach(pid => {
+      if (projectUnsubs[pid]) return;
+      projectUnsubs[pid] = onValue(ref(db, "projects/" + pid), s => {
+        if (s.exists()) projects[pid] = s.val(); else delete projects[pid];
+        render();
+      }, () => dropProject(pid));
+    });
+    Object.keys(projectUnsubs).forEach(pid => { if (ids.indexOf(pid) < 0) dropProject(pid); });
+    render();
+  }, e => toast("Could not load projects: " + e.message));
+}
+
+function dropProject(pid) {
+  if (projectUnsubs[pid]) projectUnsubs[pid]();
+  delete projectUnsubs[pid];
+  delete projects[pid];
+  render();
+}
+
+// ---------- rendering ----------
+
+function render() {
+  if (!me) return;
+  if (pendingProject && projects[pendingProject]) { current = { pid: pendingProject, key: null }; pendingProject = null; }
+  if (current.pid && !projects[current.pid]) current = { pid: null, key: null };
+  if (!current.pid && sortedIds().length) current = { pid: sortedIds()[0], key: null };
+
+  const p = projects[current.pid];
+  if (p) {
+    const sheets = sheetsOf(p);
+    const has = k => sheets.some(s => s.key === k);
+    if (pendingKey && pendingKey.pid === current.pid && has(pendingKey.key)) {
+      current.key = pendingKey.key; lastKey[current.pid] = pendingKey.key; pendingKey = null;
+    } else if (!has(current.key)) {
+      current.key = has(lastKey[current.pid]) ? lastKey[current.pid] : (sheets[0] ? sheets[0].key : null);
+    }
+  }
+  renderProjects();
+  renderTabs();
+  showFrame();
+}
+
+function renderProjects() {
+  const box = $("projects");
+  box.innerHTML = "";
+  sortedIds().forEach(pid => {
+    const b = document.createElement("button");
+    b.className = "project" + (pid === current.pid ? " active" : "");
+    b.textContent = projects[pid].name;
+    b.onclick = () => { current = { pid, key: null }; render(); };
+    box.appendChild(b);
+  });
+}
+
+function renderTabs() {
+  const box = $("tabs");
+  box.innerHTML = "";
+  const p = projects[current.pid];
+  if (!p) return;
+  sheetsOf(p).forEach(s => {
+    const b = document.createElement("button");
+    b.className = "tab" + (s.key === current.key ? " active" : "");
+    b.textContent = s.title;
+    b.onclick = () => { current.key = s.key; lastKey[current.pid] = s.key; render(); };
+    box.appendChild(b);
+  });
+}
+
+function showFrame() {
+  Object.values(frames).forEach(f => f.classList.add("hidden"));
+  const p = projects[current.pid];
+  const s = p && current.key ? (p.sheets || {})[current.key] : null;
+
+  $("addSheet").classList.toggle("hidden", !(p && isOwner(p)));
+  $("folder").classList.toggle("hidden", !(p && p.driveFolderId));
+  if (p && p.driveFolderId) $("folder").href = "https://drive.google.com/drive/folders/" + p.driveFolderId;
+  $("open").classList.toggle("hidden", !s);
+  $("empty").classList.toggle("hidden", !!s);
+
+  if (!p) { $("empty").textContent = 'No projects yet. Click "New project", or ask an owner to invite you.'; return; }
+  if (!s) { $("empty").textContent = isOwner(p) ? 'No sheets yet. Put a Sheet in the Drive folder, then click "Add sheet".' : "No sheets in this project yet."; return; }
+
+  const fk = current.pid + ":" + current.key;
+  if (!frames[fk]) {
+    const f = document.createElement("iframe");
+    f.src = sheetUrl(s.id, true);
+    f.title = p.name + " - " + s.title;
+    $("frames").appendChild(f);
+    frames[fk] = f;
+  }
+  frames[fk].classList.remove("hidden");
+  $("open").href = sheetUrl(s.id, false);
+}
+
+// ---------- actions ----------
+
+$("newProject").onclick = e => run(e.currentTarget, async () => {
+  const name = prompt("Project name?");
+  if (!name || !name.trim()) return;
+  const r = await api("createProject", { name: name.trim() });
+  pendingProject = r.pid;
+  render();
+});
+
+$("addSheet").onclick = e => run(e.currentTarget, async () => {
+  const link = prompt("Paste the Google Sheet link (the Sheet must already be in the project's Drive folder):");
+  if (!link || !link.trim()) return;
+  const pid = current.pid;
+  const r = await api("addSheet", { pid, sheet: link.trim() });
+  pendingKey = { pid, key: r.key };
+  render();
+});
+
+$("dismiss").onclick = () => $("banner").classList.add("hidden");
+</script>
+</body>
+</html>
