@@ -1848,6 +1848,7 @@
       const fb = window.firebase; LV.fb = fb;
       if(!fb.apps.length) fb.initializeApp(fbCfg);
       const auth = fb.auth(), cred = await window.Ripple.ensureGoogleUser(auth, fb);   // no timeout: the Google popup waits for the person
+      await window.Ripple.roomAccess(auth, T.fileId);
       LV.uid = (cred.user && cred.user.uid) || (auth.currentUser && auth.currentUser.uid) || "";
       const TS = fb.database.ServerValue.TIMESTAMP;
       LV.room = fb.database().ref("rooms/" + roomKey); LV.root = LV.room.child("treatment"); LV.pres = LV.room.child("treatmentPresence");
