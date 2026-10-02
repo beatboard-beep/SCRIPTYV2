@@ -2044,6 +2044,7 @@ html,body{ background: var(--uiBg) !important; }
 }
 
 </style>
+<script src="auth.js"></script>
 </head>
 <body>
 
@@ -13890,7 +13891,7 @@ ${TP.join("\n")}
       const fb = window.firebase; __LIVE.fb = fb;
       if(!fb.apps.length) fb.initializeApp(cfg);
       const auth = fb.auth();
-      const cred = auth.currentUser ? { user: auth.currentUser } : await auth.signInAnonymously();
+      const cred = await window.__ensureGoogleUser(auth, fb);
       __LIVE.uid = (cred.user && cred.user.uid) || (auth.currentUser && auth.currentUser.uid) || "";
       const room = fb.database().ref("rooms/" + live.room);
       __LIVE.room = room;
@@ -13972,7 +13973,9 @@ ${TP.join("\n")}
       if(/permission/i.test(m)) why = "Firebase refused access (" + m + "). Check the Realtime Database rules were pasted and Published.";
       else if(/operation-not-allowed|admin-restricted|anonymous/i.test(m)) why = "Anonymous sign-in isn't turned on in Firebase (Authentication → Sign-in method → Anonymous → Enable). (" + m + ")";
       else if(/load|network|fetch/i.test(m)) why = "couldn't reach Firebase (" + m + "). Check your internet connection and that databaseURL in config.json is right.";
+      else if(/popup/i.test(m)) why = "the Google sign-in popup was blocked or closed. Click “Live off” in the top bar to try again.";
       __liveOff(why);
+      if(/popup/i.test(m)){ const p = document.getElementById("livePill"); if(p) p.onclick = () => __liveStart(live); }
       __liveStatus("Live editing is off: " + why + " Your changes still save to Drive.");
     }
   }
