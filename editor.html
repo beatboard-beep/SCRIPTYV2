@@ -13892,6 +13892,20 @@ ${TP.join("\n")}
       if(!fb.apps.length) fb.initializeApp(cfg);
       const auth = fb.auth();
       const cred = await window.__ensureGoogleUser(auth, fb);
+            // Ask the hub to refresh this script's room->project mapping (never blocks, never throws)
+      try{
+        const qs = new URLSearchParams(location.search);
+        let fid = qs.get("fileId") || qs.get("id") || "";
+        if(!fid){ try{ fid = __cloud.fileId || ""; }catch(_e){} }
+        const r = await fetch("config.json?_=" + Date.now(), { cache:"no-store" });
+        const hub = r.ok ? String(((await r.json()) || {}).hubUrl || "").trim() : "";
+        const u = auth.currentUser;
+        if(hub && fid && u){
+          const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
+          await fetch(hub, { method:"POST", headers:{ "Content-Type":"text/plain;charset=UTF-8" }, signal: ctl.signal,
+            body: JSON.stringify({ idToken: await u.getIdToken(), action:"roomAccess", fileId: fid }) });
+        }
+      }catch(_e){}
       __LIVE.uid = (cred.user && cred.user.uid) || (auth.currentUser && auth.currentUser.uid) || "";
       const room = fb.database().ref("rooms/" + live.room);
       __LIVE.room = room;
