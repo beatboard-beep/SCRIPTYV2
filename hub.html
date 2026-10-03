@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hub — Ripple</title>
+<title>Hub — Camp</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317181c%22/%3E%3Crect%20x%3D%2216%22%20y%3D%2210%22%20width%3D%2232%22%20height%3D%2244%22%20rx%3D%223%22%20fill%3D%22%23f4f1ea%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2217%22%20width%3D%2218%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%2317181c%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2224%22%20width%3D%2222%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%238d8a84%22/%3E%3Crect%20x%3D%2229%22%20y%3D%2232%22%20width%3D%229%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%2317181c%22/%3E%3Crect%20x%3D%2225%22%20y%3D%2238%22%20width%3D%2216%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%238d8a84%22/%3E%3Crect%20x%3D%2225%22%20y%3D%2244%22%20width%3D%2212%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%238d8a84%22/%3E%3C/svg%3E">
 <meta name="theme-color" content="#17181c">
 <meta name="robots" content="noindex, nofollow">
@@ -242,7 +242,7 @@
 <div id="gate">
   <div class="gateBox">
     <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317181c%22/%3E%3Crect%20x%3D%2216%22%20y%3D%2210%22%20width%3D%2232%22%20height%3D%2244%22%20rx%3D%223%22%20fill%3D%22%23f4f1ea%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2217%22%20width%3D%2218%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%2317181c%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2224%22%20width%3D%2222%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%238d8a84%22/%3E%3C/svg%3E">
-    <h1>Ripple</h1>
+    <h1>Camp</h1>
     <p id="gateMsg">Your projects, scripts and production docs in one place.</p>
     <div class="row" id="gateLoading"><span class="spin"></span>Loading…</div>
     <button id="signIn" class="btn primary hidden" type="button">Sign in with Google</button>
@@ -251,7 +251,7 @@
 
 <header class="top hidden" id="top">
   <button id="menuToggle" class="iconBtn" type="button" aria-label="Projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-  <span class="brand">Ripple<span>Hub</span></span>
+  <span class="brand">Camp<span>Hub</span></span>
   <div class="topTitle" id="topTitle"></div>
   <div class="userChip"><span id="who"></span><button id="signOut" class="btn sm" type="button">Sign out</button></div>
 </header>
@@ -355,7 +355,7 @@ const ERRORS = {
   INTERNAL: "Something went wrong on the server. Try again."
 };
 const TABS = ["scripts", "storyboard", "treatment", "production"];
-const LS_LAST = "RIPPLE_HUB_LAST_V2", LS_BANNER = "RIPPLE_HUB_BANNER_HIDDEN_V1";
+const LS_LAST = "Camp_HUB_LAST_V2", LS_BANNER = "Camp_HUB_BANNER_HIDDEN_V1";
 // Shared with the Library and editor (don't rename)
 const ENDPOINT_KEYS = ["SCRIPTY_CLOUD_ENDPOINT_V1", "SCRIPTY_CLOUD_ENDPOINT", "SCRIPTY_CLOUD_URL", "CLOUD_ENDPOINT", "SCRIPTY_GAS_ENDPOINT", "SCRIPTY_CLOUD_ENDPOINT_V0"];
 const KEY_KEY = "SCRIPTY_CLOUD_KEY_V1";
@@ -381,7 +381,7 @@ let pendingProject = null;
 let firstLoad = true;
 
 // Sheet order and dark view are remembered on this device
-const ORD_KEY = "RIPPLE_HUB_SHEETORDER_V1", DARK_KEY = "RIPPLE_HUB_DARK_V1";
+const ORD_KEY = "Camp_HUB_SHEETORDER_V1", DARK_KEY = "Camp_HUB_DARK_V1";
 let sheetOrder = {}; try { sheetOrder = JSON.parse(lsGet(ORD_KEY) || "{}") || {}; } catch (_e) {}
 let DARK = lsGet(DARK_KEY) !== "0";
 let dragSheet = null;
@@ -519,10 +519,10 @@ async function copyText(t) {
   }
 }
 
-// ---------- Ripple script list (same Apps Script + password the Library uses) ----------
+// ---------- Camp script list (same Apps Script + password the Library uses) ----------
 const RIP = { ep: "", files: null, state: "idle", err: "", tried: new Set(), dr: {}, drBusy: {} };
 const normEp = u => String(u || "").trim().replace(/\s+/g, "").replace(/\/+$/, "");
-async function rippleEndpoint() {
+async function CampEndpoint() {
   for (const k of ENDPOINT_KEYS) { const v = normEp(lsGet(k)); if (v) return v; }
   try { const r = await fetch("config.json?_=" + Date.now(), { cache: "no-store" }); if (r.ok) { const j = await r.json(); return normEp(j.cloudUrl || j.cloudURL || j.cloud || j.endpoint || ""); } } catch (_e) {}
   return "";
@@ -539,11 +539,11 @@ function jsonp(url, ms = 20000) {
     document.head.appendChild(s);
   });
 }
-async function loadRipple() {
+async function loadCamp() {
   if (RIP.state === "loading") return;
   RIP.state = "loading"; renderBody();
   try {
-    if (!RIP.ep) RIP.ep = await rippleEndpoint();
+    if (!RIP.ep) RIP.ep = await CampEndpoint();
     if (!RIP.ep) throw new Error("The script cloud isn't set up on this device. Open the Script library once to set it up.");
     const url = RIP.ep + "?" + new URLSearchParams({ action: "list", key: lsGet(KEY_KEY) || "", _: Date.now() });
     let res;
@@ -559,12 +559,12 @@ async function loadRipple() {
   } catch (e) { RIP.state = "error"; RIP.err = e.message || String(e); }
   renderBody();
 }
-async function unlockRipple() {
+async function unlockCamp() {
   const v = await dialog({ title: "Enter your script password", text: "The password you use in the Script library (your own, or the team password). This device will remember it.", ok: "Unlock",
     fields: [{ name: "pw", label: "Password", type: "password" }] });
   if (!v) return;
   lsSet(KEY_KEY, v.pw);
-  RIP.state = "idle"; loadRipple();
+  RIP.state = "idle"; loadCamp();
 }
 const scriptTitle = id => { const f = RIP.files && RIP.files[id]; return f ? (f.tp.title || f.name || "Untitled script") : "Script"; };
 function fmtWhen(iso) {
@@ -679,13 +679,13 @@ function render() {
     const has = k => c.list.some(s => s.id === k);
     if (!has(current.key)) current.key = has(lastKey[current.pid]) ? lastKey[current.pid] : (c.list[0] ? c.list[0].id : null);
     saveLast();
-    if (RIP.state === "idle") loadRipple();
+    if (RIP.state === "idle") loadCamp();
     // A newly linked script the list doesn't know yet: refresh once
-    else if (RIP.state === "ok" && scriptIds(p).some(id => !RIP.files[id] && !RIP.tried.has(id))) { scriptIds(p).forEach(id => RIP.tried.add(id)); RIP.state = "idle"; loadRipple(); }
+    else if (RIP.state === "ok" && scriptIds(p).some(id => !RIP.files[id] && !RIP.tried.has(id))) { scriptIds(p).forEach(id => RIP.tried.add(id)); RIP.state = "idle"; loadCamp(); }
     if (RIP.state === "ok" && current.tab === "scripts") scriptIds(p).forEach(id => { if (!(id in RIP.dr) && !RIP.drBusy[id]) loadDrafts(id); });
   }
   $("topTitle").textContent = p ? p.name : "";
-  document.title = (p ? p.name + " — " : "") + "Ripple";
+  document.title = (p ? p.name + " — " : "") + "Camp";
   renderProjects();
   renderBody();
   renderMembers();
@@ -770,8 +770,8 @@ function renderList(p) {
 }
 function wireList(pane) {
   pane.querySelector("[data-act=link]")?.addEventListener("click", e => linkScript(e.currentTarget));
-  pane.querySelector("[data-act=unlock]")?.addEventListener("click", unlockRipple);
-  pane.querySelector("[data-act=retry]")?.addEventListener("click", () => { RIP.state = "idle"; loadRipple(); });
+  pane.querySelector("[data-act=unlock]")?.addEventListener("click", unlockCamp);
+  pane.querySelector("[data-act=retry]")?.addEventListener("click", () => { RIP.state = "idle"; loadCamp(); });
   pane.querySelector("[data-act=create]")?.addEventListener("click", e => createDocsFlow(e.currentTarget));
   pane.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openDraft(b.dataset.view, b.dataset.label, false); }));
   pane.querySelectorAll("[data-dl]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openDraft(b.dataset.dl, b.dataset.label, true); }));
@@ -859,7 +859,7 @@ function showFrame() {
 
 // ---------- actions ----------
 $("newProject").onclick = e => run(e.currentTarget, async () => {
-  if (!RIP.files && RIP.state !== "loading") await loadRipple();
+  if (!RIP.files && RIP.state !== "loading") await loadCamp();
   const linked = new Set(); Object.values(projects).forEach(p => scriptIds(p).forEach(id => linked.add(id)));
   const opts = [{ value: "", label: "No script yet" }].concat(
     Object.values(RIP.files || {}).filter(f => !linked.has(f.id))
@@ -867,7 +867,7 @@ $("newProject").onclick = e => run(e.currentTarget, async () => {
       .map(f => ({ value: f.id, label: f.tp.title || f.name || "Untitled script" })));
   const v = await dialog({
     title: "New project",
-    text: "Pick a script and Ripple makes the project's Drive folder for you, then links the script.",
+    text: "Pick a script and Camp makes the project's Drive folder for you, then links the script.",
     ok: "Create project",
     fields: [
       { name: "fileId", label: "Script", options: opts, check: () => "" },
@@ -885,14 +885,14 @@ $("newProject").onclick = e => run(e.currentTarget, async () => {
   const r = await api("createProject", args);
   pendingProject = r.pid; current.tab = "scripts";
   if (v.fileId) {
-    // ⚠ ripple/sync: linking makes the script's live room members-only
+    // ⚠ Camp/sync: linking makes the script's live room members-only
     try { await api("linkScript", { pid: r.pid, fileId: v.fileId }); toast("Project created and script linked.", "ok"); }
     catch (err) { toast("Project created, but the script wasn't linked: " + err.message); }
   } else toast("Project created.", "ok");
   render();
 });
 
-// ⚠ ripple/sync: linking makes the script's live room members-only
+// ⚠ Camp/sync: linking makes the script's live room members-only
 function linkScript(btn) {
   return run(btn, async () => {
     const p = projects[current.pid]; if (!p) return;
@@ -909,10 +909,10 @@ function linkScript(btn) {
   });
 }
 
-// ---------- create production docs (built by Ripple's script cloud into this project's Drive folder) ----------
+// ---------- create production docs (built by Camp's script cloud into this project's Drive folder) ----------
 const DOCS = { budget: "Budget", schedule: "Schedule", shotlist: "Shot list", productiondocs: "Crew, cast & locations" };
 async function exportDoc(kind, fileId, retried) {
-  if (!RIP.ep) RIP.ep = await rippleEndpoint();
+  if (!RIP.ep) RIP.ep = await CampEndpoint();
   if (!RIP.ep) throw new Error("The script cloud isn't set up on this device. Open the Script library once to set it up.");
   const p = projects[current.pid]; let tz = "";
   try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_e) {}
@@ -927,7 +927,7 @@ async function exportDoc(kind, fileId, retried) {
   } finally { clearTimeout(t); }
   if (res && res.auth === false) {
     if (retried) throw new Error("Locked: enter your script password.");
-    await unlockRipple();
+    await unlockCamp();
     return exportDoc(kind, fileId, true);
   }
   if (!res || res.ok !== true) throw new Error(String((res && res.error) || "Couldn't make it."));
@@ -938,7 +938,7 @@ function createDocsFlow(btn) {
     const p = projects[current.pid]; if (!p) return;
     const ids = scriptIds(p);
     if (!ids.length) { toast("Link a script to this project first (Scripts tab › Link script)."); return; }
-    if (!RIP.files && RIP.state !== "loading") await loadRipple();
+    if (!RIP.files && RIP.state !== "loading") await loadCamp();
     const fields = [{ name: "kind", label: "What to create", check: () => "",
       options: [{ value: "all", label: "Everything below" }].concat(Object.keys(DOCS).map(k => ({ value: k, label: DOCS[k] }))) }];
     if (ids.length > 1) fields.push({ name: "id", label: "Script", check: () => "", options: ids.map(id => ({ value: id, label: scriptTitle(id) })) });
@@ -965,7 +965,7 @@ async function setupStoryboard(id, btn) {
 $("createDocs").onclick = e => createDocsFlow(e.currentTarget);
 
 // ---------- project panel: search, sort, favourites, recents, drag to rearrange, quick switcher ----------
-const PREF_KEY = "RIPPLE_HUB_PREFS_V1";
+const PREF_KEY = "Camp_HUB_PREFS_V1";
 const prefs = { fav: [], order: [], color: {}, opened: {}, sort: "manual", showArchived: false };
 try { Object.assign(prefs, JSON.parse(lsGet(PREF_KEY) || "{}")); } catch (_e) {}
 const savePrefs = () => lsSet(PREF_KEY, JSON.stringify(prefs));
@@ -1163,16 +1163,16 @@ document.addEventListener("keydown", e => {
   if (e.key === "/" && !typing && !document.querySelector(".shade")) { e.preventDefault(); document.body.classList.add("sideOpen"); $("projSearch").focus(); }
 });
 
-// ---------- drafts: exported PDFs kept under their script (served by Ripple's script cloud) ----------
+// ---------- drafts: exported PDFs kept under their script (served by Camp's script cloud) ----------
 const openDrafts = {};
 async function ripGet(params, ms) {
-  if (!RIP.ep) RIP.ep = await rippleEndpoint();
+  if (!RIP.ep) RIP.ep = await CampEndpoint();
   if (!RIP.ep) throw new Error("The script cloud isn't set up on this device.");
   const url = RIP.ep + "?" + new URLSearchParams(Object.assign({}, params, { key: lsGet(KEY_KEY) || "", _: Date.now() }));
   try { return await (await fetch(url, { cache: "no-store" })).json(); } catch (_e) { return await jsonp(url, ms || 20000); }
 }
 async function ripPost(body) {
-  if (!RIP.ep) RIP.ep = await rippleEndpoint();
+  if (!RIP.ep) RIP.ep = await CampEndpoint();
   if (!RIP.ep) throw new Error("The script cloud isn't set up on this device.");
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 60000);
   try {
