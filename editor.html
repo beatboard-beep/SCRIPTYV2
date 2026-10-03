@@ -2866,14 +2866,10 @@ document.getElementById("mPDF")?.addEventListener("click",()=>{ closeMenus(); cl
 
   // Library / Cloud routing (index.html)
   document.getElementById("mLibrary")?.addEventListener("click",()=>{
-    closeMenus();
-    try{
-      const base = location.href.replace(/[^/]*$/, "index.html");
-      window.location.href = base;
-    }catch(_e){
-      window.location.href = "index.html";
-    }
-  });
+  closeMenus();
+  const hub = new URLSearchParams(location.search).get("hub");
+  window.location.href = hub ? "hub.html?pid=" + encodeURIComponent(hub) + "&tab=scripts" : "index.html";
+});
   // Edit menu actions
   function focusEditor(){
     const ed = document.getElementById("scriptEditor");
@@ -17316,6 +17312,7 @@ function clearHighlights(){
     if(id) p.set("fileId", id);
     const nm = c.name || qs.get("name"); if(nm) p.set("name", nm);
     const ep = c.endpoint || qs.get("cloud"); if(ep) p.set("cloud", ep);
+    const hub = qs.get("hub"); if(hub) p.set("hub", hub);
     return "storyboard.html" + (p.toString() ? "?" + p.toString() : "");
   };
   function flash(msg){
