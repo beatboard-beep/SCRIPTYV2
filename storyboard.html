@@ -435,7 +435,9 @@
     S.prevRooms = (loadRes.live && Array.isArray(loadRes.live.prev)) ? loadRes.live.prev.filter((k) => k && k !== S.roomKey) : [];
     document.getElementById("pageTitle").textContent = S.title + " — Storyboard";
     document.title = S.title + " · Storyboard — Ripple";
-    document.getElementById("scriptLink").href = "editor.html?fileId=" + encodeURIComponent(S.fileId) + cloudParam();
+    const hub = new URLSearchParams(location.search).get("hub");
+    document.getElementById("scriptLink").href = "editor.html?fileId=" + encodeURIComponent(S.fileId) + cloudParam() + (hub ? "&hub=" + encodeURIComponent(hub) : "");
+    if(hub){ const b = document.getElementById("backLink"); b.href = "hub.html?pid=" + encodeURIComponent(hub) + "&tab=storyboard"; b.innerHTML = "&larr; Project"; }
 
     const sl = await apiGet("shotlistdata", { fileId: S.fileId });
     if(!sl || sl.ok === false){
