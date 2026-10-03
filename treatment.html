@@ -1942,7 +1942,9 @@
     LV.name = (loadRes.me && loadRes.me.name) || "Someone";
     document.getElementById("pageTitle").textContent = T.title + " — Treatment";
     document.title = T.title + " · Treatment — Ripple";
-    const q = "?fileId=" + encodeURIComponent(T.fileId) + cloudParam();
+    const hub = new URLSearchParams(location.search).get("hub");
+    const q = "?fileId=" + encodeURIComponent(T.fileId) + cloudParam() + (hub ? "&hub=" + encodeURIComponent(hub) : "");
+    if(hub){ const b = document.getElementById("backLink"); b.href = "hub.html?pid=" + encodeURIComponent(hub) + "&tab=treatment"; b.innerHTML = "&larr; Project"; }
     document.getElementById("scriptLink").href = "editor.html" + q;
     document.getElementById("sbLink").href = "storyboard.html" + q;
 
