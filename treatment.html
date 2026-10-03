@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Treatment — Ripple</title>
+<title>Treatment — Camp</title>
 <meta name="theme-color" content="#17181c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,14 +255,14 @@
 <div id="printRoot"></div>
 <div id="tToast" role="status" aria-live="polite"><span id="tToastMsg"></span></div>
 
-<script src="ripple-core.js"></script>
+<script src="Camp-core.js"></script>
 <script>
 (function(){
   "use strict";
 
-  /* ---------------- Route / config / API: shared in ripple-core.js ---------------- */
-  const { route, loadConfig_, apiGet, loadScript, escapeHtml, cloudParam } = window.Ripple;
-  const apiPost = (action, body) => window.Ripple.apiPost(action, body, 90000);   // treatment saves can be large
+  /* ---------------- Route / config / API: shared in Camp-core.js ---------------- */
+  const { route, loadConfig_, apiGet, loadScript, escapeHtml, cloudParam } = window.Camp;
+  const apiPost = (action, body) => window.Camp.apiPost(action, body, 90000);   // treatment saves can be large
 
   /* ---------------- Feedback ---------------- */
   let __toastT = 0;
@@ -866,7 +866,7 @@
     });
     document.getElementById("stageWrap").addEventListener("pointerdown", (e) => { if(!e.target.closest("#stage")) deselect(); });
     // Drop a library image (or a photo file from the computer) onto an image frame
-    const hasKind = (e) => { const t = Array.from((e.dataTransfer && e.dataTransfer.types) || []); return t.includes("text/x-ripple-img") || t.includes("Files"); };
+    const hasKind = (e) => { const t = Array.from((e.dataTransfer && e.dataTransfer.types) || []); return t.includes("text/x-Camp-img") || t.includes("Files"); };
     const clearDrop = () => stage.querySelectorAll(".dropTarget").forEach((n) => n.classList.remove("dropTarget"));
     const targetAt = (e) => {
       const n = document.elementFromPoint(e.clientX, e.clientY), en = n && n.closest("#stage .tpage .el"), el = en && findEl(en.dataset.id);
@@ -877,7 +877,7 @@
     stage.addEventListener("drop", async (e) => {
       if(!hasKind(e)) return;
       e.preventDefault(); clearDrop();
-      const t = targetAt(e), id = e.dataTransfer.getData("text/x-ripple-img");
+      const t = targetAt(e), id = e.dataTransfer.getData("text/x-Camp-img");
       if(id){ if(!t){ notify("Drop it onto an image frame.", true); return; } setImage(t.el, id); return; }
       const files = Array.from(e.dataTransfer.files || []).filter((f) => /^image\//.test(f.type));
       if(!files.length) return;
@@ -1263,7 +1263,7 @@
       const id = b.dataset.id, im = b.querySelector("img"), c = IMG[id];
       if(c && c.thumb) im.src = c.thumb; else ensureImg(id);
       b.onclick = (e) => { if(!e.target.closest("[data-del]")) placeFromLib(id); };
-      b.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/x-ripple-img", id); e.dataTransfer.effectAllowed = "copy"; });
+      b.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/x-Camp-img", id); e.dataTransfer.effectAllowed = "copy"; });
       b.querySelector("[data-del]").onclick = (e) => { e.stopPropagation(); removeFromLib(id); };
     });
     const file = rail.querySelector("#libFile");
@@ -1572,7 +1572,7 @@
   /* ---------------- Saving: this device + Drive + live room ---------------- */
   // Every change goes three places: this browser (instant safety copy), the live room (so teammates
   // see it) and Drive (its own file next to the script; one person, the "leader", saves for everyone).
-  const LOCAL_PREFIX = "RIPPLE_TREATMENT_LOCAL_V1:";
+  const LOCAL_PREFIX = "Camp_TREATMENT_LOCAL_V1:";
   const localKey = () => LOCAL_PREFIX + (T.fileId || "none");
   const DR = { inflight:false, timer:0, retryT:0, err:"", offline:false, unsupported:false, warned:false };
   let driveDirty = false, dirtySeq = 0, __localT = 0;
@@ -1847,8 +1847,8 @@
       await withTimeout(Promise.all([loadScript(LIVE_SDK + "firebase-auth-compat.js"), loadScript(LIVE_SDK + "firebase-database-compat.js")]), 12000);
       const fb = window.firebase; LV.fb = fb;
       if(!fb.apps.length) fb.initializeApp(fbCfg);
-      const auth = fb.auth(), cred = await window.Ripple.ensureGoogleUser(auth, fb);   // no timeout: the Google popup waits for the person
-      await window.Ripple.roomAccess(auth, T.fileId);
+      const auth = fb.auth(), cred = await window.Camp.ensureGoogleUser(auth, fb);   // no timeout: the Google popup waits for the person
+      await window.Camp.roomAccess(auth, T.fileId);
       LV.uid = (cred.user && cred.user.uid) || (auth.currentUser && auth.currentUser.uid) || "";
       const TS = fb.database.ServerValue.TIMESTAMP;
       LV.room = fb.database().ref("rooms/" + roomKey); LV.root = LV.room.child("treatment"); LV.pres = LV.room.child("treatmentPresence");
@@ -1941,7 +1941,7 @@
     RO = !!loadRes.readOnly; if(RO) document.body.classList.add("ro");
     LV.name = (loadRes.me && loadRes.me.name) || "Someone";
     document.getElementById("pageTitle").textContent = T.title + " — Treatment";
-    document.title = T.title + " · Treatment — Ripple";
+    document.title = T.title + " · Treatment — Camp";
     const hub = new URLSearchParams(location.search).get("hub");
     const q = "?fileId=" + encodeURIComponent(T.fileId) + cloudParam() + (hub ? "&hub=" + encodeURIComponent(hub) : "");
     if(hub){ const b = document.getElementById("backLink"); b.href = "hub.html?pid=" + encodeURIComponent(hub) + "&tab=treatment"; b.innerHTML = "&larr; Project"; }
