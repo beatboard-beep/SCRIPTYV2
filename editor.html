@@ -2088,6 +2088,7 @@ html,body{ background: var(--uiBg) !important; }
             </button>
             <div class="submenu" role="menu" aria-label="Export">
               <button class="item" id="mPDF" type="button">Export PDF</button>
+              <button class="item" id="mSaveDraft" type="button">Save draft (keep a PDF)…</button>
               <button class="item" id="mExportFDX" type="button">Export Final Draft (.fdx)</button>
               <button class="item" id="mExportFountain" type="button">Export Fountain</button>
               <div class="sep"></div>
@@ -2863,6 +2864,7 @@ document.getElementById("mExportProdDocs")?.addEventListener("click",()=>{ close
 document.getElementById("mSave")?.addEventListener("click",()=>{ closeMenus(); click("saveBtn"); });
 document.getElementById("mPrint")?.addEventListener("click",()=>{ closeMenus(); click("printBtn"); });
 document.getElementById("mPDF")?.addEventListener("click",()=>{ closeMenus(); click("pdfBtn"); });
+document.getElementById("mSaveDraft")?.addEventListener("click",()=>{ closeMenus(); window.__scriptySaveDraft && window.__scriptySaveDraft(); });
 
   // Library / Cloud routing (index.html)
   document.getElementById("mLibrary")?.addEventListener("click",()=>{
@@ -11709,13 +11711,15 @@ async function __exportPdfExactInner(opts){
   const title = (typeof getTitleFieldValue === "function" ? getTitleFieldValue("tp_title") : "") || (document.getElementById("topTitle")?.textContent || "") || "Script";
   const blob = await __pdfBuild(pages, wPt, hPt, title, pc);
   const fileName = (String(title).replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim() || "Script") + ".pdf";
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = fileName; a.rel = "noopener";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if(!opts.noDownload){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = fileName; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
   try{ window.__lastPdfBlob = blob; }catch(_e){}
-  return { pages: pages.length, fileName, photocopy: !!pc, inkMissing: !!(pc && pc.p.ink !== "clean" && !pc.ink) };
+  return { blob, pages: pages.length, fileName, photocopy: !!pc, inkMissing: !!(pc && pc.p.ink !== "clean" && !pc.ink) };
 }
 
   let __pdfBusy = false;
@@ -11753,6 +11757,72 @@ async function __exportPdfExactInner(opts){
       printNow();
     }finally{ __pdfBusy = false; }
   });
+    // ---------- Save a draft PDF (shown under the script in the Hub) ----------
+  window.__scriptySaveDraft = function(){
+    if(window.__scriptyReadOnly){ alert("This script is view only."); return; }
+    if(window.__scriptyMe && window.__scriptyMe.role && window.__scriptyMe.role !== "owner"){ alert("Only the owner can save drafts."); return; }
+    if(!__cloud || !__cloud.endpoint){ alert("Cloud isn't set up. Open the Library and set your Apps Script link first."); return; }
+    const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
+    const dflt = __draftLabel() || ("Draft " + p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + String(d.getFullYear()).slice(-2));
+    const esc = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+    const shade = document.createElement("div");
+    shade.className = "wmShade";
+    shade.innerHTML = `
+      <div class="wmBox" role="dialog" aria-label="Save draft" style="width:min(440px,100%)">
+        <div class="wmHead"><b>Save a draft</b><span>Saves a PDF of the script as it is now. It's listed under this script in the Hub, newest first.</span></div>
+        <div class="wmLbl">Draft name</div>
+        <input type="text" data-k="label" style="width:100%;height:38px;padding:0 12px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;font:inherit;outline:none;box-sizing:border-box">
+        <div class="bdMsg" data-msg></div>
+        <div class="wmActs"><button type="button" data-a="close">Close</button><button type="button" class="primary" data-a="go">Save draft</button></div>
+      </div>`;
+    document.body.appendChild(shade);
+    const q = (s) => shade.querySelector(s);
+    let busy = false;
+    const close = () => { if(!busy) shade.remove(); };
+    const msg = (html, cls) => { const m = q("[data-msg]"); m.className = "bdMsg" + (cls ? " " + cls : ""); m.innerHTML = html; };
+    const inp = q('[data-k="label"]'); inp.value = dflt;
+    q('[data-a="close"]').onclick = close;
+    shade.addEventListener("mousedown", (e) => { if(e.target === shade) close(); });
+    shade.addEventListener("keydown", (e) => { e.stopPropagation(); if(e.key === "Escape") close(); if(e.key === "Enter") q('[data-a="go"]').click(); });
+    const post = async (body) => {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 120000);
+      try{
+        const r = await fetch(normalizeEndpoint(__cloud.endpoint), { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(Object.assign({ key: getCloudKey() }, body)), cache: "no-store", signal: ctl.signal });
+        return await r.json();
+      }catch(err){ throw new Error(err && err.name === "AbortError" ? "Google took too long. Try again." : "Couldn't reach Drive."); }
+      finally{ clearTimeout(t); }
+    };
+    q('[data-a="go"]').onclick = async () => {
+      if(busy) return;
+      const label = inp.value.replace(/\s+/g, " ").trim();
+      if(!label){ msg("Give the draft a name.", "err"); return; }
+      const go = q('[data-a="go"]'); busy = true; go.disabled = true;
+      try{
+        msg('<span class="bdSpin"></span>Saving the script…');
+        if(!__cloud.fileId || __autosaveDirty){
+          await persistDocToCloud({ source: "manual" });
+          if(!__cloud.fileId) throw new Error(__saveError || "Save the script to Drive first (File › Save).");
+        }
+        msg('<span class="bdSpin"></span>Making the PDF…');
+        const out = await exportPdfExact({ noDownload: true });
+        const dataUrl = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(new Error("Couldn't read the PDF.")); r.readAsDataURL(out.blob); });
+        msg('<span class="bdSpin"></span>Saving to Drive…');
+        const body = { action: "savedraft", fileId: __cloud.fileId, label: label, pages: out.pages, dataUrl: dataUrl };
+        let res = await post(body);
+        for(let i = 0; i < 3 && res && res.auth === false; i++){ if(!(await __askCloudPassword(true))) break; res = await post(body); }
+        if(res && res.auth === false) throw new Error("Locked: enter your password to save.");
+        if(!res || res.ok !== true){
+          const e = String((res && res.error) || "Couldn't save the draft.");
+          throw new Error(/Unknown action/i.test(e) ? "Update your Google script first: paste the new Code.gs, then deploy a new version." : e);
+        }
+        msg("Draft saved. It's listed under this script in the Hub.", "ok");
+        go.textContent = "Save another";
+      }catch(err){
+        msg(esc(err && err.message ? err.message : String(err)), "err");
+      }finally{ busy = false; go.disabled = false; }
+    };
+    setTimeout(() => { inp.focus(); inp.select(); }, 30);
+  };
   // ---------- Final Draft (.fdx) and Fountain: export + import ----------
   const __IX_TYPES_FDX = { scene:"Scene Heading", action:"Action", character:"Character", dialogue:"Dialogue", parenthetical:"Parenthetical", transition:"Transition" };
   const __ixPlain = (runs) => (runs || []).map(r => r.c ? String(r.t || "").toUpperCase() : String(r.t || "")).join("");
