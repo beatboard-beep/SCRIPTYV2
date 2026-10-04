@@ -1,5 +1,5 @@
-/* ripple-core.js — shared route/config/API/password helpers for Ripple pages.
-   Exposes window.Ripple. Load with <script src="ripple-core.js"></script> before the page script. */
+/* camp-core.js — shared route/config/API/password helpers for camp pages.
+   Exposes window.camp. Load with <script src="camp-core.js"></script> before the page script. */
 (function(){
   "use strict";
 
@@ -130,5 +130,5 @@
       return out && out.ok ? out.data : { linked:false };
     }catch(_e){ return { linked:false }; }
   }
-   window.Ripple = { ensureGoogleUser, roomAccess, route, normalizeEndpoint, loadConfig_, getCloudEndpoint, getCloudKey, setCloudKey, cloudParam, escapeHtml, loadScript, askPassword, fetchJson_, apiGet, apiPost };
+   window.camp = { ensureGoogleUser, roomAccess, route, normalizeEndpoint, loadConfig_, getCloudEndpoint, getCloudKey, setCloudKey, cloudParam, escapeHtml, loadScript, askPassword, fetchJson_, apiGet, apiPost };
 })();
